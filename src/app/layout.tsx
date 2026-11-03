@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Figtree, Geist_Mono, Outfit } from "next/font/google";
+import { SiteFooter } from "@/components/site/SiteFooter";
+import { SiteHeader } from "@/components/site/SiteHeader";
+import { StoreProvider } from "@/services/redux/provider";
 import "./globals.css";
 
 const figtree = Figtree({
@@ -30,7 +33,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className={`${figtree.variable} ${outfit.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-screen flex flex-col font-sans">
+        <StoreProvider>
+          <SiteHeader />
+          {children}
+          <SiteFooter />
+        </StoreProvider>
+      </body>
     </html>
   );
 }

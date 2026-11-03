@@ -25,7 +25,7 @@ export function SiteFooter() {
           <p>Handcrafted metal wall art and home décor to make every space beautiful and meaningful.</p>
           <div className="social-links">
             {["f", "◎", "▶", "𝕏"].map((icon, index) => (
-              <a href="/#footer" aria-label={["Facebook", "Instagram", "YouTube", "Twitter"][index]} key={icon}>{icon}</a>
+              <Link href="/#footer" aria-label={["Facebook", "Instagram", "YouTube", "Twitter"][index]} key={icon}>{icon}</Link>
             ))}
           </div>
         </div>
@@ -38,16 +38,16 @@ export function SiteFooter() {
         <div className="footer-column app-column">
           <h3>Download Our App</h3>
           <p>Shop faster, right from your phone.</p>
-          <a className="store-link" href="/#footer"><Icon name="shield" /> Download on the App Store</a>
-          <a className="store-link" href="/#footer"><Icon name="shield" /> Get it on Google Play</a>
+          <Link className="store-link" href="/#footer"><Icon name="shield" /> Download on the App Store</Link>
+          <Link className="store-link" href="/#footer"><Icon name="shield" /> Get it on Google Play</Link>
         </div>
       </div>
       <div className="footer-legal">
         <div className="page-width">
           <span>© 2026 The India Decor. All rights reserved.</span>
           <div>
-            <a href="/#footer">Privacy Policy</a>
-            <a href="/#footer">Terms &amp; Conditions</a>
+            <Link href="/#footer">Privacy Policy</Link>
+            <Link href="/#footer">Terms &amp; Conditions</Link>
             <strong><Icon name="shield" /> Secure Payments</strong>
           </div>
         </div>

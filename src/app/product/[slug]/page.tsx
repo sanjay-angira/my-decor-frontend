@@ -5,8 +5,6 @@ import { ProductDetails } from "@/components/product/ProductDetails";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
-import { SiteFooter } from "@/components/site/SiteFooter";
-import { SiteHeader } from "@/components/site/SiteHeader";
 import { getProductBySlug, products, type Product } from "@/data/products";
 
 type PageProps = {
@@ -86,24 +84,20 @@ export default async function ProductPage({ params }: PageProps) {
   if (!product) notFound();
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <SiteHeader />
-      <main className="flex-1 pb-14">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }}
-        />
-        <ProductBreadcrumb category={product.category} name={product.name} />
-        <div className="container-page grid gap-10 pt-6 lg:grid-cols-2 lg:gap-14">
-          <ProductGallery product={product} />
-          <ProductPurchasePanel product={product} />
-        </div>
-        <div className="container-page">
-          <ProductDetails product={product} />
-        </div>
-        <RelatedProducts product={product} />
-      </main>
-      <SiteFooter />
-    </div>
+    <main className="flex-1 pb-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product)) }}
+      />
+      <ProductBreadcrumb category={product.category} name={product.name} />
+      <div className="container-page grid gap-10 pt-6 lg:grid-cols-2 lg:gap-14">
+        <ProductGallery product={product} />
+        <ProductPurchasePanel product={product} />
+      </div>
+      <div className="container-page">
+        <ProductDetails product={product} />
+      </div>
+      <RelatedProducts product={product} />
+    </main>
   );
 }

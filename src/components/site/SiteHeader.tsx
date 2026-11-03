@@ -34,7 +34,7 @@ export function SiteHeader() {
           <div className="announcement-links">
             <a href="tel:+919800000000"><Icon name="phone" /> +91 98000 00000</a>
             <a href="mailto:info@indiadecor.com"><Icon name="mail" /> info@indiadecor.com</a>
-            <a href="/#footer"><Icon name="shield" /> Help Center</a>
+            <Link href="/#footer"><Icon name="shield" /> Help Center</Link>
           </div>
         </div>
       </div>
@@ -48,7 +48,7 @@ export function SiteHeader() {
           </label>
           <div className="header-actions">
             <Link className="header-action-label" href="/#featured"><Icon name="sparkles" /> Offers</Link>
-            <a className="header-action-label" href="/#footer"><Icon name="tag" /> Track Order</a>
+            <Link className="header-action-label" href="/#footer"><Icon name="tag" /> Track Order</Link>
             <button className="icon-button" type="button" aria-label="Wishlist"><Icon name="heart" /></button>
             <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
               <Icon name="bag" /><span className="cart-count">2</span>
