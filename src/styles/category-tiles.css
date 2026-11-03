@@ -1,0 +1,129 @@
+.category-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 28px;
+}
+
+.tile-row {
+  display: grid;
+  gap: 16px;
+}
+
+.tile-row-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tile-row-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.collection-tile {
+  position: relative;
+  display: flex;
+  min-height: 280px;
+  overflow: hidden;
+  align-items: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--sand);
+}
+
+.collection-tile-large {
+  min-height: 400px;
+}
+
+.collection-tile > img {
+  object-fit: cover;
+  transition: transform .7s;
+}
+
+.collection-tile:hover > img {
+  transform: scale(1.05);
+}
+
+.tile-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgb(250 249 245 / 87%), rgb(250 249 245 / 40%) 53%, transparent);
+}
+
+.collection-tile-large .tile-shade {
+  background: linear-gradient(90deg, rgb(250 249 245 / 84%), rgb(250 249 245 / 36%) 56%, transparent);
+}
+
+.tile-copy {
+  position: relative;
+  display: flex;
+  max-width: 330px;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 28px;
+}
+
+.tile-copy strong {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.tile-copy > span {
+  margin-top: 8px;
+  color: #706d67;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tile-copy b {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.tile-copy b svg {
+  width: 16px;
+  height: 16px;
+  transition: transform .2s;
+}
+
+.collection-tile:hover .tile-copy b {
+  color: var(--brand);
+}
+
+.collection-tile:hover .tile-copy b svg {
+  transform: translateX(4px);
+}
+
+@media (max-width: 760px) {
+  .category-tiles {
+    gap: 12px;
+    padding-top: 22px;
+  }
+
+  .tile-row {
+    gap: 12px;
+  }
+
+  .tile-row-two,
+  .tile-row-three {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-tile {
+    min-height: 224px;
+  }
+
+  .collection-tile-large {
+    min-height: 288px;
+  }
+
+  .tile-copy {
+    padding: 23px;
+  }
+
+  .tile-copy strong {
+    font-size: 21px;
+  }
+}

@@ -1,0 +1,43 @@
+.button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 13px;
+  font-weight: 700;
+  transition: gap .2s, opacity .2s;
+  cursor: pointer;
+}
+
+.button:hover {
+  gap: 14px;
+  opacity: .9;
+}
+
+.button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.button-dark {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.button-brand-outline {
+  border: 2px solid var(--brand);
+  background: transparent;
+  color: var(--brand);
+}
+
+.button-brand-outline:hover {
+  background: var(--brand);
+  color: white;
+  opacity: 1;
+}

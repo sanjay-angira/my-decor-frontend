@@ -1,0 +1,241 @@
+.product-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.best-seller-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.arrivals-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.product-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s;
+}
+
+.product-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.product-image {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--sand);
+}
+
+.product-image img {
+  object-fit: cover;
+  transition: transform .7s;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.05);
+}
+
+.product-image-trigger {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.product-image-trigger:focus-visible,
+.product-name-button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
+}
+
+.product-card--arrival {
+  overflow: hidden;
+  padding: 0;
+}
+
+.product-card--arrival .product-image {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.product-card--arrival .product-info {
+  padding: 12px;
+}
+
+.wishlist-button {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 91%);
+  color: #66625c;
+  cursor: pointer;
+}
+
+.wishlist-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.wishlist-button:hover {
+  color: #b94a47;
+}
+
+.product-info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-top: 12px;
+}
+
+.product-info h3 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.375;
+}
+
+.product-name-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-name-button:hover {
+  color: var(--brand);
+}
+
+.product-card--arrival .product-info h3 {
+  -webkit-line-clamp: 1;
+  font-size: 12px;
+}
+
+.product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0 0;
+  white-space: nowrap;
+}
+
+.product-price strong {
+  font-size: 16px;
+}
+
+.product-price del {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.product-card--arrival .product-price {
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.product-card--arrival .product-price strong {
+  font-size: 14px;
+}
+
+.product-card--arrival .product-price del {
+  font-size: 10px;
+}
+
+.product-bottom {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rating svg {
+  width: 14px;
+  height: 14px;
+  fill: #f2b830;
+  color: #f2b830;
+}
+
+.add-to-cart {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+
+.add-to-cart svg {
+  width: 17px;
+  height: 17px;
+}
+
+.add-to-cart:hover {
+  background: var(--brand);
+}
+
+@media (max-width: 760px) {
+  .product-grid {
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .best-seller-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .arrivals-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .best-seller-grid,
+  .arrivals-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 641px) and (max-width: 760px) {
+  .arrivals-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

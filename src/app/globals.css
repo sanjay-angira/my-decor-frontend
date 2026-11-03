@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+@import "../styles/utilities.css";
+@import "../styles/button.css";
+@import "../styles/site-header.css";
+@import "../styles/site-footer.css";
+@import "../styles/hero.css";
+@import "../styles/category-circles.css";
+@import "../styles/category-tiles.css";
+@import "../styles/trust-badges.css";
+@import "../styles/section.css";
+@import "../styles/featured.css";
+@import "../styles/product-card.css";
+@import "../styles/product-quick-view.css";
+@import "../styles/mid-banner.css";
+@import "../styles/room-cards.css";
+@import "../styles/newsletter.css";
+@import "../styles/trusted-by.css";
+@import "../styles/pdp.css";
+
+:root {
+  --radius-2xsm: 4px;
+  --radius-xsm: 8px;
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-md: 20px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
+  --radius-3xl: 36px;
+  --radius-full: 9999px;
+  --background: oklch(0.981 0.007 95);
+  --foreground: oklch(0.245 0.014 75);
+  --card: oklch(1 0 0);
+  --muted: oklch(0.51 0.02 75);
+  --muted-foreground: oklch(0.51 0.02 75);
+  --secondary: oklch(0.955 0.01 95);
+  --border: oklch(0.917 0.012 90);
+  --card-border: var(--border);
+  --input: oklch(0.917 0.012 90);
+  --primary: oklch(0.26 0.014 75);
+  --primary-foreground: oklch(0.981 0.007 95);
+  --brand: oklch(0.46 0.088 166);
+  --brand-foreground: oklch(0.975 0.015 130);
+  --brand-soft: oklch(0.945 0.035 150);
+  --accent-foreground: oklch(0.33 0.06 160);
+  --destructive: oklch(0.577 0.245 27.325);
+  --sand: oklch(0.925 0.022 88);
+  --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-muted: var(--secondary);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-sand: var(--sand);
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+  /* Same default Tailwind shadows used by inspired-homepage-studio */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.14);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
