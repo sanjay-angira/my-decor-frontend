@@ -76,7 +76,7 @@ export function SiteHeader() {
             >
               <Icon name={searchOpen ? "close" : "search"} />
             </button>
-            <button className="icon-button wishlist-button" type="button" aria-label="Wishlist"><Icon name="heart" /></button>
+            <button className="icon-button header-wishlist-button" type="button" aria-label="Wishlist"><Icon name="heart" /></button>
             <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
               <Icon name="bag" /><span className="cart-count">2</span>
             </button>
@@ -100,8 +100,10 @@ export function SiteHeader() {
         {searchOpen && (
           <div className="mobile-search-row">
             <label className="search-field">
-              <Icon name="search" />
-              <input autoFocus type="search" placeholder="Search décor…" aria-label="Search décor" />
+              <input autoFocus type="search" placeholder={'Search "Superhero Wall Art"'} aria-label="Search décor" />
+              <button type="button" aria-label="Submit search">
+                <Icon name="search" />
+              </button>
             </label>
           </div>
         )}
