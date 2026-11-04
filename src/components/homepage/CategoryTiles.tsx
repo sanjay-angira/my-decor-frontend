@@ -17,4 +17,4 @@ const CategoryTiles = () => {
   );
 }
 
-export default CategoryTiles;
+export default CategoryTiles; 

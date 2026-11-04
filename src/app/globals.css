@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@import "slick-carousel/slick/slick.css";
 @import "../styles/utilities.css";
 @import "../styles/button.css";
 @import "../styles/site-header.css";

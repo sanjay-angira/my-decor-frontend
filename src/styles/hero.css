@@ -4,16 +4,48 @@
 
 .hero {
   position: relative;
-  display: grid;
   min-height: 445px;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--sand);
 }
 
+.hero > .slick-slider {
+  position: static;
+}
+
+.hero-slide {
+  display: grid !important;
+  min-height: 445px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+}
+
+.hero-slide-full {
+  display: block !important;
+}
+
+.hero-full-link {
+  position: relative;
+  display: block;
+  min-height: 445px;
+  width: 100%;
+}
+
+.hero-full-link img {
+  object-fit: cover;
+}
+
+.hero .slick-slide {
+  height: auto;
+}
+
+.hero .slick-slide > div {
+  height: 100%;
+}
+
 .hero-copy {
   z-index: 1;
+  grid-column: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -58,6 +90,7 @@
 
 .hero-image {
   position: relative;
+  grid-column: 2;
   min-height: 445px;
   overflow: hidden;
 }
@@ -110,29 +143,49 @@
   right: 12px;
 }
 
-.carousel-dots {
-  position: absolute;
-  bottom: 21px;
-  left: 50px;
+.hero .slick-dots {
+  position: absolute !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: 21px !important;
+  left: 50px !important;
   z-index: 3;
-  display: flex;
+  display: flex !important;
   gap: 8px;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.carousel-dots button {
+.hero .slick-dots li {
+  display: block;
+  width: auto;
+  height: auto;
+  margin: 0;
+}
+
+.hero .slick-dots li button {
+  display: block;
   width: 8px;
   height: 8px;
   padding: 0;
   border: 0;
   border-radius: var(--radius-full);
-  background: color-mix(in oklch, var(--foreground) 40%, transparent);
+  background-color: color-mix(in oklch, var(--foreground) 40%, transparent);
   cursor: pointer;
   transition: width .2s;
+  font-size: 0;
+  line-height: 0;
 }
 
-.carousel-dots button.active {
+.hero .slick-dots li button::before {
+  display: none;
+}
+
+.hero .slick-dots li.slick-active button {
   width: 28px;
-  background: var(--foreground);
+  background-color: var(--foreground);
 }
 
 @keyframes fade-up {
@@ -154,12 +207,21 @@
 
   .hero {
     min-height: 0;
-    grid-template-columns: 1fr;
     border-radius: var(--radius);
   }
 
+  .hero-slide {
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .hero-full-link {
+    min-height: 260px;
+  }
+
   .hero-image {
-    order: 0;
+    grid-column: 1;
+    grid-row: 1;
     min-height: 260px;
   }
 
@@ -168,7 +230,8 @@
   }
 
   .hero-copy {
-    order: 1;
+    grid-column: 1;
+    grid-row: 2;
     padding: 23px 24px 48px;
   }
 
@@ -200,9 +263,9 @@
     right: 10px;
   }
 
-  .carousel-dots {
-    bottom: 19px;
-    left: 24px;
+  .hero .slick-dots {
+    bottom: 19px !important;
+    left: 24px !important;
   }
 }
 
