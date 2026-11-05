@@ -11,6 +11,7 @@ const heroSlides = [
     buttonLink: "/collections/all",
     buttonText: "Shop Now",
     desktopImage: "/images/herobanner1.png",
+    tabletImage: "/images/tabletbanner1.png",
     mobileImage: "/images/mobilebanner1.png",
     alt: "Black metal mountain wall art above a cream sofa in a modern living room",
   },
@@ -19,6 +20,7 @@ const heroSlides = [
     buttonLink: "/collections/all",
     buttonText: "Explore Collection",
     desktopImage: "/images/herobanner2.png",
+    tabletImage: "/images/tabletbanner2.png",
     mobileImage: "/images/mobilebanner2.png",
     alt: "Black metal mountain wall art above a wooden dining table",
   },
@@ -27,7 +29,8 @@ const heroSlides = [
     buttonLink: "/collections/all",
     buttonText: "Explore Collection",
     desktopImage: "/images/herobanner3.png",
-    mobileImage: "/images/mobilebanner3.png",
+    tabletImage: "/images/tabletbanner3.png",
+    mobileImage: "/images/mobilebanner3.png",   
     alt: "Black metal mountain wall art above a wooden dining table",
   },
   {
@@ -35,6 +38,7 @@ const heroSlides = [
     buttonLink: "/collections/all",
     buttonText: "Explore Collection",
     desktopImage: "/images/herobanner4.png",
+    tabletImage: "/images/tabletbanner4.png",
     mobileImage: "/images/mobilebanner4.png",
     alt: "Black metal mountain wall art above a wooden dining table",
   },
@@ -73,8 +77,12 @@ const HeroBanner = () => {
               >
                 <picture>
                   <source
-                    media="(max-width: 540px)"
+                    media="(max-width: 767px)"
                     srcSet={slide.mobileImage || slide.desktopImage}
+                  />
+                  <source
+                    media="(max-width: 1199px)"
+                    srcSet={slide.tabletImage || slide.desktopImage}
                   />
                   <img
                     src={slide.desktopImage}

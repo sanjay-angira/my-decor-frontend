@@ -244,7 +244,7 @@
   }
 
   .carousel-control {
-    top: 130px;
+    top: 50%;
     width: 34px;
     height: 34px;
   }
@@ -268,7 +268,4 @@
     min-height: 220px;
   }
 
-  .carousel-control {
-    top: 110px;
-  }
 }
