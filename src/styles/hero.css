@@ -4,7 +4,6 @@
 
 .hero {
   position: relative;
-  min-height: 445px;
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--sand);
@@ -22,17 +21,16 @@
 
 .hero-slide-full {
   display: block !important;
+  min-height: 0;
 }
 
 .hero-full-link {
-  position: relative;
   display: block;
-  min-height: 445px;
   width: 100%;
 }
 
-.hero-full-link img {
-  object-fit: cover;
+.hero-full-link picture {
+  display: block;
 }
 
 .hero .slick-slide {
@@ -213,10 +211,6 @@
   .hero-slide {
     min-height: 0;
     grid-template-columns: 1fr;
-  }
-
-  .hero-full-link {
-    min-height: 260px;
   }
 
   .hero-image {

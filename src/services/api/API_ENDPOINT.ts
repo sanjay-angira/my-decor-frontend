@@ -8,7 +8,6 @@ export const API_ENDPOINTS = {
     REFRESH_TOKEN: "customer/auth/refresh-token",
   },
   CUSTOMER: {
-    HOMEPAGE: "customer/homepage",
     BANNERS: "customer/banners",
     CATEGORIES: "customer/categories",
     PRODUCTS: "customer/all-products",
