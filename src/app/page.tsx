@@ -1,10 +1,10 @@
-"use client";
 import { RecentlyViewed } from "@/components/homepage/RecentlyViewed";
-import { bestSellerSlugs, getProductsBySlugs, newArrivalSlugs } from "@/data/products";
-
-
-
-import HeroBanner from "@/components/homepage/HeroBanner";
+import {
+  bestSellerSlugs,
+  getProductsBySlugs,
+  newArrivalSlugs,
+} from "@/data/products";
+import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
 import TrustedBy from "@/components/homepage/TrustedBy";
 import Newsletter from "@/components/homepage/Newsletter";
 import NewArrivals from "@/components/homepage/NewArrivals";
@@ -15,12 +15,14 @@ import FeaturedCollection from "@/components/homepage/FeaturedCollection";
 import TrustBadges from "@/components/homepage/TrustBadges";
 import CategoryTiles from "@/components/homepage/CategoryTiles";
 import CategoryCircles from "@/components/homepage/CategoryCircles";
+import { fetchHomepageBanners } from "@/services/homepageService";
+
+export const dynamic = "force-dynamic";
 
 const image = (name: string) => `/images/${name}.jpg`;
 
 const bestSellers = getProductsBySlugs(bestSellerSlugs);
 const newArrivals = getProductsBySlugs(newArrivalSlugs);
-
 
 const categories = [
   ["Wall Art", "art_tree"],
@@ -34,10 +36,26 @@ const categories = [
 ].map(([label, asset]) => ({ label, image: image(asset) }));
 
 const featured = [
-  { title: "Wall Art", blurb: "Elegant designs to transform your walls.", image: image("art_leaves") },
-  { title: "Planters", blurb: "Greenery for a fresher space.", image: image("hanging_planters") },
-  { title: "Lamps", blurb: "Light up your home with style.", image: image("lamp") },
-  { title: "Gym Wall Art", blurb: "For a stronger, bolder you.", image: image("art_gym") },
+  {
+    title: "Wall Art",
+    blurb: "Elegant designs to transform your walls.",
+    image: image("art_leaves"),
+  },
+  {
+    title: "Planters",
+    blurb: "Greenery for a fresher space.",
+    image: image("hanging_planters"),
+  },
+  {
+    title: "Lamps",
+    blurb: "Light up your home with style.",
+    image: image("lamp"),
+  },
+  {
+    title: "Gym Wall Art",
+    blurb: "For a stronger, bolder you.",
+    image: image("art_gym"),
+  },
 ];
 
 const rooms = [
@@ -47,11 +65,44 @@ const rooms = [
   { label: "Entryway", image: image("room_entry") },
 ];
 
-  
-export default function Home() {
+export default async function Home() {
+  let heroSlides: HeroSlide[] = [];
+  try {
+    const banners = await fetchHomepageBanners();
+    heroSlides = banners
+      .filter(
+        (banner) =>
+          banner.desktopImage ||
+          banner.tabletImage ||
+          banner.mobileImage ||
+          banner.image,
+      )
+      .map((banner): HeroSlide => {
+        const desktopImage =
+          banner.desktopImage ||
+          banner.image ||
+          banner.tabletImage ||
+          banner.mobileImage ||
+          "";
+
+        return {
+          id: banner.id,
+          buttonLink: banner.link || "/collections/all",
+          buttonText:
+            banner.source === "offer" ? "Shop Offer" : "Explore Collection",
+          desktopImage,
+          tabletImage: banner.tabletImage || desktopImage,
+          mobileImage: banner.mobileImage || desktopImage,
+          alt: banner.title,
+        };
+      });
+  } catch (error) {
+    console.error("Failed to load homepage banners on the server.", error);
+  }
+
   return (
     <main>
-      <HeroBanner />
+      <HeroBanner slides={heroSlides} />
       <CategoryCircles categories={categories} />
       <CategoryTiles />
       <TrustBadges />

@@ -1,59 +1,29 @@
-
 "use client";
 import { useRef } from "react";
 import Link from "next/link";
 import Slider, { type Settings } from "react-slick";
 import { Icon } from "@/components/Icon";
 
-const heroSlides = [
-  {
-    id: 1,
-    buttonLink: "/collections/all",
-    buttonText: "Shop Now",
-    desktopImage: "/images/herobanner1.png",
-    tabletImage: "/images/tabletbanner1.png",
-    mobileImage: "/images/mobilebanner1.png",
-    alt: "Black metal mountain wall art above a cream sofa in a modern living room",
-  },
-  {
-    id: 2,
-    buttonLink: "/collections/all",
-    buttonText: "Explore Collection",
-    desktopImage: "/images/herobanner2.png",
-    tabletImage: "/images/tabletbanner2.png",
-    mobileImage: "/images/mobilebanner2.png",
-    alt: "Black metal mountain wall art above a wooden dining table",
-  },
-  {
-    id: 3,
-    buttonLink: "/collections/all",
-    buttonText: "Explore Collection",
-    desktopImage: "/images/herobanner3.png",
-    tabletImage: "/images/tabletbanner3.png",
-    mobileImage: "/images/mobilebanner3.png",   
-    alt: "Black metal mountain wall art above a wooden dining table",
-  },
-  {
-    id: 4,
-    buttonLink: "/collections/all",
-    buttonText: "Explore Collection",
-    desktopImage: "/images/herobanner4.png",
-    tabletImage: "/images/tabletbanner4.png",
-    mobileImage: "/images/mobilebanner4.png",
-    alt: "Black metal mountain wall art above a wooden dining table",
-  },
-];
+export type HeroSlide = {
+  id: string | number;
+  buttonLink: string;
+  buttonText: string;
+  desktopImage: string;
+  tabletImage: string;
+  mobileImage: string;
+  alt: string;
+};
 
-const HeroBanner = () => {
+const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
   const sliderRef = useRef<Slider | null>(null);
 
   const settings: Settings = {
     accessibility: true,
     arrows: false,
-    autoplay: true,
+    autoplay: slides.length > 1,
     autoplaySpeed: 7000,
-    dots: true,
-    infinite: true,
+    dots: slides.length > 1,
+    infinite: slides.length > 1,
     pauseOnHover: true,
     pauseOnFocus: true,
     slidesToShow: 1,
@@ -64,11 +34,16 @@ const HeroBanner = () => {
     ),
   };
 
+  if (!slides.length) return null;
+
   return (
-    <section className="page-width hero-section" aria-label="Featured collections">
+    <section
+      className="page-width hero-section"
+      aria-label="Featured collections"
+    >
       <div className="hero">
         <Slider ref={sliderRef} {...settings}>
-          {heroSlides.map((slide, index) => (
+          {slides.map((slide, index) => (
             <article className="hero-slide hero-slide-full" key={slide.id}>
               <Link
                 className="hero-full-link"
@@ -94,22 +69,26 @@ const HeroBanner = () => {
             </article>
           ))}
         </Slider>
-        <button
-          className="carousel-control previous"
-          type="button"
-          aria-label="Previous slide"
-          onClick={() => sliderRef.current?.slickPrev()}
-        >
-          <Icon name="chevronLeft" />
-        </button>
-        <button
-          className="carousel-control next"
-          type="button"
-          aria-label="Next slide"
-          onClick={() => sliderRef.current?.slickNext()}
-        >
-          <Icon name="chevronRight" />
-        </button>
+        {slides.length > 1 && (
+          <>
+            <button
+              className="carousel-control previous"
+              type="button"
+              aria-label="Previous slide"
+              onClick={() => sliderRef.current?.slickPrev()}
+            >
+              <Icon name="chevronLeft" />
+            </button>
+            <button
+              className="carousel-control next"
+              type="button"
+              aria-label="Next slide"
+              onClick={() => sliderRef.current?.slickNext()}
+            >
+              <Icon name="chevronRight" />
+            </button>
+          </>
+        )}
       </div>
     </section>
   );
