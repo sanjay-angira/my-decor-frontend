@@ -5,13 +5,12 @@ import Slider, { type Settings } from "react-slick";
 import { Icon } from "@/components/Icon";
 
 export type HeroSlide = {
-  id: string | number;
-  buttonLink: string;
-  buttonText: string;
+  id: number;
+  title:string;
+  slug: string;
   desktopImage: string;
   tabletImage: string;
   mobileImage: string;
-  alt: string;
 };
 
 const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
@@ -47,8 +46,7 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
             <article className="hero-slide hero-slide-full" key={slide.id}>
               <Link
                 className="hero-full-link"
-                href={slide.buttonLink}
-                aria-label={slide.buttonText}
+                href={`/${slide.slug}`}
               >
                 <picture>
                   <source
@@ -61,7 +59,7 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
                   />
                   <img
                     src={slide.desktopImage}
-                    alt={slide.alt}
+                    alt="no-image-found"
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                 </picture>

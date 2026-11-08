@@ -68,34 +68,7 @@ const rooms = [
 export default async function Home() {
   let heroSlides: HeroSlide[] = [];
   try {
-    const banners = await fetchHomepageBanners();
-    heroSlides = banners
-      .filter(
-        (banner) =>
-          banner.desktopImage ||
-          banner.tabletImage ||
-          banner.mobileImage ||
-          banner.image,
-      )
-      .map((banner): HeroSlide => {
-        const desktopImage =
-          banner.desktopImage ||
-          banner.image ||
-          banner.tabletImage ||
-          banner.mobileImage ||
-          "";
-
-        return {
-          id: banner.id,
-          buttonLink: banner.link || "/collections/all",
-          buttonText:
-            banner.source === "offer" ? "Shop Offer" : "Explore Collection",
-          desktopImage,
-          tabletImage: banner.tabletImage || desktopImage,
-          mobileImage: banner.mobileImage || desktopImage,
-          alt: banner.title,
-        };
-      });
+    heroSlides = await fetchHomepageBanners(); 
   } catch (error) {
     console.error("Failed to load homepage banners on the server.", error);
   }

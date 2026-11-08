@@ -2,15 +2,13 @@ import { API_ENDPOINTS } from "./api/API_ENDPOINT";
 import type { ApiSuccessResponse } from "./api/errors";
 
 export type HomepageBanner = {
-  id: string;
+  id: number;
   source: "offer" | "category";
   title: string;
-  subtitle: string;
-  image: string | null;
-  desktopImage: string | null;
-  tabletImage: string | null;
-  mobileImage: string | null;
-  link: string;
+  slug: string;
+  desktopImage: string;
+  tabletImage: string;
+  mobileImage: string;
 };
 
 const API_BASE_URL =
