@@ -6,9 +6,9 @@ import { Icon } from "@/components/Icon";
 
 export type HeroSlide = {
   id: number;
+  source: string;
   title:string;
-  slug?: string;
-  href?: string;
+  slug: string;
   desktopImage: string;
   tabletImage: string;
   mobileImage: string;
@@ -47,7 +47,7 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
             <article className="hero-slide hero-slide-full" key={slide.id}>
               <Link
                 className="hero-full-link"
-                href={slide.href || (slide.slug ? `/${slide.slug}` : "/products")}
+                href={slide.source === 'category' ? `/category/${slide.slug}` : `/products?offer=${slide.slug}`}
               >
                 <picture>
                   <source

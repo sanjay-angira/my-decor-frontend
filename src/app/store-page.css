@@ -203,6 +203,13 @@
   scrollbar-width: thin;
 }
 
+.store-results-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .store-results-heading .products-eyebrow {
   margin-bottom: 3px;
   font-size: 9px;
@@ -220,6 +227,31 @@
   margin: 5px 0 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+.store-mobile-filters-bar {
+  display: none;
+  margin-bottom: 14px;
+}
+
+.store-mobile-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.store-filters-loading {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 8px 0;
 }
 
 .store-active-filters {
@@ -296,10 +328,21 @@
 
   .store-sidebar {
     position: static;
+    display: none;
     max-height: none;
     overflow: visible;
-    padding: 0;
+    padding: 0 0 12px;
     border-right: 0;
+  }
+
+  .store-mobile-filters-bar {
+    display: block;
+  }
+
+  .store-sidebar.is-open,
+  .store-sidebar[data-open="true"] {
+    display: block;
+    order: -1;
   }
 
   .store-category-filter {

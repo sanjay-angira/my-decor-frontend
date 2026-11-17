@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@/components/Icon";
+import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
+import { getData } from "@/services/api/apiService";
+import type { ApiSuccessResponse } from "@/services/api/errors";
 
 function Logo() {
   return (
@@ -14,19 +17,74 @@ function Logo() {
   );
 }
 
-const navItems = [
-  ["Wall Art", "/#featured"],
-  ["Planters", "/#featured"],
-  ["Lamps", "/#featured"],
-  ["Desk Organizers", "/#featured"],
-  ["Gym Wall Art", "/#best-sellers"],
-  ["Car Wall Art", "/#best-sellers"],
-  ["Spiritual Wall Art", "/#best-sellers"],
-] as const;
+type HeaderCategory = {
+  id: number;
+  name: string;
+  slug?: string | null;
+  parentId?: number | null;
+};
+
+type HeaderCategoriesResponse =
+  | HeaderCategory[]
+  | {
+      rows?: HeaderCategory[];
+    };
+
+function categoryHref(category: HeaderCategory): string {
+  const slug = category.slug?.trim();
+  return slug
+    ? `/category/${encodeURIComponent(slug)}`
+    : `/products?categoryIds=${category.id}`;
+}
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [categories, setCategories] = useState<HeaderCategory[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadCategories = async () => {
+      try {
+        const response = await getData<
+          ApiSuccessResponse<HeaderCategoriesResponse>
+        >(API_ENDPOINTS.CUSTOMER.CATEGORIES, undefined, {
+          auth: false,
+          signal: controller.signal,
+        });
+
+        if (response.success) {
+          const rows = Array.isArray(response.data)
+            ? response.data
+            : Array.isArray(response.data?.rows)
+              ? response.data.rows
+              : [];
+          setCategories(
+            rows.filter(
+              (category) =>
+                Number.isInteger(category.id) &&
+                category.id > 0 &&
+                Boolean(category.name?.trim()),
+            ),
+          );
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          console.error("Failed to load header categories.", error);
+        }
+      }
+    };
+
+    void loadCategories();
+    return () => controller.abort();
+  }, []);
+
+  const topLevelCategories = categories.filter(
+    (category) => category.parentId === null || category.parentId === undefined,
+  );
+  const headerCategories =
+    topLevelCategories.length > 0 ? topLevelCategories : categories;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -110,11 +168,12 @@ export function SiteHeader() {
 
         <nav className="page-width category-navigation" aria-label="Categories">
           <div className="category-nav-links">
-            {navItems.map(([label, href]) => (
-              <Link href={href} key={label}>{label}{["Wall Art", "Planters"].includes(label) && <Icon name="chevronDown" />}</Link>
+            {headerCategories.map((category) => (
+              <Link href={categoryHref(category)} key={category.id}>
+                {category.name}
+              </Link>
             ))}
-              <Link href="/products">All Products</Link>
-            <Link href="/#shop-by-room">More <Icon name="chevronDown" /></Link>
+            <Link href="/products">All Products</Link>
           </div>
           <Link className="all-categories" href="/#categories">View All Categories</Link>
         </nav>
@@ -145,10 +204,12 @@ export function SiteHeader() {
                   <Icon name="tag" /> Product Categories
                 </h2>
                 <nav className="mobile-category-links" aria-label="Product categories">
-                  {navItems.map(([label, href]) => (
-                    <Link href={href} key={label} onClick={() => setMenuOpen(false)}>{label}</Link>
+                  {headerCategories.map((category) => (
+                    <Link href={categoryHref(category)} key={category.id} onClick={() => setMenuOpen(false)}>
+                      {category.name}
+                    </Link>
                   ))}
-                  <Link href="/#shop-by-room" onClick={() => setMenuOpen(false)}>More</Link>
+                  <Link href="/products" onClick={() => setMenuOpen(false)}>All Products</Link>
                 </nav>
                 <Link className="mobile-all-categories" href="/#categories" onClick={() => setMenuOpen(false)}>
                   View All Categories

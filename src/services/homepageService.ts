@@ -40,6 +40,7 @@ export type StoreProductsQuery = {
   pageNumber: number;
   pageSize: number;
   search?: string;
+  offerIds?: number[];
   sortBy?: "newest" | "price_asc" | "price_desc" | "name_asc" | "discount_desc";
   bestSellers?: boolean;
   newArrivals?: boolean;
@@ -65,9 +66,15 @@ export type StoreFilters = {
     slug?: string | null;
     parentId: number | null;
   }[];
+  offers?: {
+    id: number;
+    name: string;
+    slug?: string | null;
+  }[];
   priceRange: { min: number; max: number };
   banners: {
     id: string;
+    source?: "offer" | "category";
     title: string;
     image: string | null;
     desktopImage: string | null;
@@ -83,6 +90,14 @@ export type StoreCategory = {
   slug: string;
   description: string;
   desktopBanner: string | null;
+  categoryOffers?: {
+    id: number;
+    name: string;
+    slug?: string | null;
+    desktopImage: string | null;
+    tabletImage: string | null;
+    mobileImage: string | null;
+  }[];
 };
 
 type StoreCategoriesResponse = {
@@ -92,6 +107,14 @@ type StoreCategoriesResponse = {
     slug?: string | null;
     description?: string | null;
     desktopBanner?: string | null;
+    categoryOffers?: Array<{
+      id: number;
+      name: string;
+      slug?: string | null;
+      desktopImage?: string | null;
+      tabletImage?: string | null;
+      mobileImage?: string | null;
+    }>;
   }>;
 };
 
@@ -135,6 +158,7 @@ export async function fetchStoreProducts(
     sortBy: params.sortBy || "newest",
   });
   if (params.search?.trim()) query.set("search", params.search.trim());
+  if (params.offerIds?.length) query.set("offerIds", params.offerIds.join(","));
   if (params.bestSellers) query.set("bestSellers", "true");
   if (params.newArrivals) query.set("newArrivals", "true");
   if (params.featured) query.set("featured", "true");
@@ -221,6 +245,14 @@ export async function fetchStoreCategoryBySlug(
     slug: category.slug,
     description: description.toLowerCase().startsWith("no descr") ? "" : description,
     desktopBanner: category.desktopBanner || null,
+    categoryOffers: Array.isArray(category.categoryOffers)
+      ? category.categoryOffers.map((offer) => ({
+          ...offer,
+          desktopImage: offer.desktopImage ?? null,
+          tabletImage: offer.tabletImage ?? null,
+          mobileImage: offer.mobileImage ?? null,
+        }))
+      : [],
   };
 }
 

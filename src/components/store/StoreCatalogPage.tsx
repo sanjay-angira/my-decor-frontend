@@ -1,9 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { AutoSubmitFilterForm } from "@/components/AutoSubmitFilterForm";
-import { PriceRangeFilter } from "@/components/PriceRangeFilter";
 import { ProductCard } from "@/components/ProductCard";
-import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
 import {
   fetchStoreFilters,
   fetchStoreProducts,
@@ -55,6 +51,7 @@ function storePageHref(
     search: string;
     sortBy: NonNullable<StoreProductsQuery["sortBy"]>;
     categoryIds: number[];
+    offerSlugs: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
@@ -69,6 +66,7 @@ function storePageHref(
     sortBy: state.sortBy,
   });
   if (state.search) params.set("search", state.search);
+  if (state.offerSlugs.length) params.set("offer", state.offerSlugs.join("/"));
   if (state.categoryIds.length) {
     params.set("categoryIds", state.categoryIds.join(","));
   }
@@ -107,6 +105,25 @@ export async function StoreCatalogPage({
     ),
   ];
   const categoryIds = category ? [category.id] : selectedCategoryIds;
+  const offerSlugs = [
+    ...new Set(
+      allValues(query.offer)
+        .flatMap((value) => value.split("/"))
+        .map((slug) => slug.trim())
+        .filter(Boolean),
+    ),
+  ];
+  const offerIds = offerSlugs.length
+    ? filters.offers
+        ?.filter(
+          (offer) =>
+            offer.slug &&
+            offerSlugs.some(
+              (slug) => slug.toLowerCase() === offer.slug?.trim().toLowerCase(),
+            ),
+        )
+        .map((offer) => offer.id) || []
+    : [];
   const rangeMin = Number(filters.priceRange.min) || 0;
   const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
   const requestedMinPrice = parseOptionalNumber(firstValue(query.minPrice));
@@ -121,23 +138,12 @@ export async function StoreCatalogPage({
   const newArrivals = isChecked(firstValue(query.newArrivals));
   const featured = isChecked(firstValue(query.featured));
   const bestDeals = isChecked(firstValue(query.bestDeals));
-  const filterFormKey = JSON.stringify({
-    pagePath,
-    search,
-    sortBy,
-    selectedCategoryIds,
-    minPrice,
-    maxPrice,
-    minRating,
-    newArrivals,
-    featured,
-    bestDeals,
-  });
   const result = await fetchStoreProducts({
     pageNumber,
     pageSize,
     search,
     sortBy,
+    offerIds,
     categoryIds,
     minPrice,
     maxPrice,
@@ -151,6 +157,7 @@ export async function StoreCatalogPage({
     search,
     sortBy,
     categoryIds: selectedCategoryIds,
+    offerSlugs,
     minPrice,
     maxPrice,
     minRating,
@@ -162,6 +169,19 @@ export async function StoreCatalogPage({
     storePageHref(1, { ...paginationState, ...updates }, pagePath);
   const activeFilters: ActiveFilter[] = [];
 
+  for (const offerSlug of offerSlugs) {
+    const offer = filters.offers?.find(
+      (item) =>
+        item.slug?.trim().toLowerCase() === offerSlug.toLowerCase(),
+    );
+    activeFilters.push({
+      id: `offer-${offerSlug}`,
+      label: offer?.name || "Offer",
+      href: filterHref({
+        offerSlugs: offerSlugs.filter((slug) => slug !== offerSlug),
+      }),
+    });
+  }
   if (newArrivals) {
     activeFilters.push({
       id: "new-arrivals",
@@ -239,228 +259,91 @@ export async function StoreCatalogPage({
       href: filterHref({ search: "" }),
     });
   }
-  const heroSlides: HeroSlide[] = filters.banners.flatMap((banner, index) => {
-    const desktopImage =
-      banner.desktopImage ||
-      banner.image ||
-      banner.tabletImage ||
-      banner.mobileImage ||
-      "";
-    if (!desktopImage) return [];
-    const categoryId = /^category-(\d+)$/.exec(banner.id)?.[1];
-    const bannerCategory = categoryId
-      ? filters.categories.find((item) => item.id === Number(categoryId))
-      : undefined;
-    return [{
-      id: index + 1,
-      title: banner.title,
-      href: bannerCategory?.slug
-        ? `/category/${encodeURIComponent(bannerCategory.slug)}`
-        : categoryId
-          ? `/products?categoryIds=${categoryId}`
-          : "/products",
-      desktopImage,
-      tabletImage: banner.tabletImage || desktopImage,
-      mobileImage: banner.mobileImage || banner.tabletImage || desktopImage,
-    }];
-  });
 
   return (
-    <main className="store-page">
-      {!category && <HeroBanner slides={heroSlides} />}
-
-      <div className="container-page store-content">
-        {category?.desktopBanner && (
-          <div className="store-category-banner">
-            <Image
-              src={category.desktopBanner}
-              alt={`${category.name} collection`}
-              fill
-              sizes="100vw"
-              priority
-              unoptimized
-            />
-          </div>
+    <section className="store-results" aria-labelledby="store-title">
+      <nav className="store-breadcrumb" aria-label="Breadcrumb">
+        <Link href="/">Home</Link>
+        <span aria-hidden="true">›</span>
+        {category ? (
+          <>
+            <Link href="/products">All Products</Link>
+            <span aria-hidden="true">›</span>
+            <span aria-current="page">{category.name}</span>
+          </>
+        ) : (
+          <span>All Products</span>
         )}
+      </nav>
 
-        <nav className="store-breadcrumb" aria-label="Breadcrumb">
-          <Link href="/">Home</Link>
-          <span aria-hidden="true">›</span>
+      <header className="store-results-heading">
+        <div>
+          <p className="products-eyebrow">THE INDIA DÉCOR</p>
+          <h1 id="store-title">{category?.name || "Home decor store"}</h1>
           {category ? (
-            <>
-              <Link href="/products">All Products</Link>
-              <span aria-hidden="true">›</span>
-              <span aria-current="page">{category.name}</span>
-            </>
+            category.description && <p>{category.description}</p>
           ) : (
-            <span>All Products</span>
+            <p>Shop curated wall art and modern decor for every room.</p>
+          )}
+        </div>
+      </header>
+
+      {activeFilters.length > 0 && (
+        <div className="store-active-filters" aria-label="Active filters">
+          {activeFilters.map((filter) => (
+            <Link
+              className="store-active-filter"
+              href={filter.href}
+              key={filter.id}
+              aria-label={`Remove ${filter.label} filter`}
+            >
+              <span>{filter.label}</span>
+              <span className="store-active-filter-remove" aria-hidden="true">
+                ×
+              </span>
+            </Link>
+          ))}
+          <Link className="store-clear-filters" href={pagePath}>
+            Clear Filters
+          </Link>
+        </div>
+      )}
+
+      {result.products.length > 0 ? (
+        <div className="product-grid catalog-grid">
+          {result.products.map((product) => (
+            <ProductCard
+              key={`${product.id}-${product.slug}`}
+              product={product}
+              showRating
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="products-empty">
+          <p>We couldn&apos;t find any products matching these filters.</p>
+        </div>
+      )}
+
+      {pageCount > 1 && (
+        <nav className="products-pagination" aria-label="Product pages">
+          {pageNumber > 1 ? (
+            <Link href={storePageHref(pageNumber - 1, paginationState, pagePath)}>
+              Previous
+            </Link>
+          ) : (
+            <span aria-disabled="true">Previous</span>
+          )}
+          <span>Page {pageNumber} of {pageCount}</span>
+          {pageNumber < pageCount ? (
+            <Link href={storePageHref(pageNumber + 1, paginationState, pagePath)}>
+              Next
+            </Link>
+          ) : (
+            <span aria-disabled="true">Next</span>
           )}
         </nav>
-
-        <div className="store-layout">
-          <aside className="store-sidebar" aria-label="Product filters">
-            <AutoSubmitFilterForm action={pagePath} key={filterFormKey}>
-              <input type="hidden" name="search" value={search} />
-              {categoryIds
-                .filter((id) => category && id === category.id)
-                .map((id) => (
-                  <input type="hidden" name="categoryIds" value={id} key={id} />
-                ))}
-
-              <fieldset className="store-filter-group">
-                <legend>Price</legend>
-                <PriceRangeFilter
-                  key={`${minPrice ?? ""}-${maxPrice ?? ""}`}
-                  min={rangeMin}
-                  max={rangeMax}
-                  selectedMin={minPrice}
-                  selectedMax={maxPrice}
-                />
-              </fieldset>
-
-              <fieldset className="store-filter-group">
-                <legend>Sort By</legend>
-                <select
-                  className="store-sort-select"
-                  name="sortBy"
-                  defaultValue={sortBy}
-                  aria-label="Sort products"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="name_asc">Name: A to Z</option>
-                  <option value="discount_desc">Best Discount</option>
-                </select>
-              </fieldset>
-
-              <fieldset className="store-filter-group">
-                <legend>Product Type</legend>
-                <label className="store-check-option">
-                  <input type="checkbox" name="newArrivals" value="true" defaultChecked={newArrivals} />
-                  <span>New Arrivals</span>
-                </label>
-                <label className="store-check-option">
-                  <input type="checkbox" name="featured" value="true" defaultChecked={featured} />
-                  <span>Featured Products</span>
-                </label>
-                <label className="store-check-option">
-                  <input type="checkbox" name="bestDeals" value="true" defaultChecked={bestDeals} />
-                  <span>Best Deals</span>
-                </label>
-              </fieldset>
-
-              {!category && (
-                <fieldset className="store-filter-group store-category-filter">
-                  <legend>Product Categories</legend>
-                  {filters.categories.map((categoryOption) => (
-                    <label
-                      className="store-check-option"
-                      data-child={categoryOption.parentId !== null}
-                      key={categoryOption.id}
-                    >
-                      <input
-                        type="checkbox"
-                        name="categoryIds"
-                        value={categoryOption.id}
-                        defaultChecked={selectedCategoryIds.includes(categoryOption.id)}
-                      />
-                      <span>{categoryOption.name}</span>
-                    </label>
-                  ))}
-                </fieldset>
-              )}
-
-              <fieldset className="store-filter-group">
-                <legend>Customer Rating</legend>
-                {[4, 3, 2, 1].map((rating) => (
-                  <label className="store-check-option" key={rating}>
-                    <input
-                      type="radio"
-                      name="minRating"
-                      value={rating}
-                      defaultChecked={minRating === rating}
-                    />
-                    <span>{rating} stars &amp; up</span>
-                  </label>
-                ))}
-              </fieldset>
-
-            </AutoSubmitFilterForm>
-          </aside>
-
-          <section className="store-results" aria-labelledby="store-title">
-            <header className="store-results-heading">
-              <div>
-                <p className="products-eyebrow">THE INDIA DÉCOR</p>
-                <h1 id="store-title">{category?.name || "Home decor store"}</h1>
-                {category ? (
-                  category.description && <p>{category.description}</p>
-                ) : (
-                  <p>Shop curated wall art and modern decor for every room.</p>
-                )}
-              </div>
-            </header>
-
-            {activeFilters.length > 0 && (
-              <div className="store-active-filters" aria-label="Active filters">
-                {activeFilters.map((filter) => (
-                  <Link
-                    className="store-active-filter"
-                    href={filter.href}
-                    key={filter.id}
-                    aria-label={`Remove ${filter.label} filter`}
-                  >
-                    <span>{filter.label}</span>
-                    <span className="store-active-filter-remove" aria-hidden="true">
-                      ×
-                    </span>
-                  </Link>
-                ))}
-                <Link className="store-clear-filters" href={pagePath}>
-                  Clear Filters
-                </Link>
-              </div>
-            )}
-
-            {result.products.length > 0 ? (
-              <div className="product-grid catalog-grid">
-                {result.products.map((product) => (
-                  <ProductCard
-                    key={`${product.id}-${product.slug}`}
-                    product={product}
-                    showRating
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="products-empty">
-                <p>We couldn&apos;t find any products matching these filters.</p>
-              </div>
-            )}
-
-            {pageCount > 1 && (
-              <nav className="products-pagination" aria-label="Product pages">
-                {pageNumber > 1 ? (
-                  <Link href={storePageHref(pageNumber - 1, paginationState, pagePath)}>
-                    Previous
-                  </Link>
-                ) : (
-                  <span aria-disabled="true">Previous</span>
-                )}
-                <span>Page {pageNumber} of {pageCount}</span>
-                {pageNumber < pageCount ? (
-                  <Link href={storePageHref(pageNumber + 1, paginationState, pagePath)}>
-                    Next
-                  </Link>
-                ) : (
-                  <span aria-disabled="true">Next</span>
-                )}
-              </nav>
-            )}
-          </section>
-        </div>
-      </div>
-    </main>
+      )}
+    </section>
   );
 }
