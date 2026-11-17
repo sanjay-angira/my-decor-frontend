@@ -40,6 +40,11 @@ export interface Product {
   reviews: ProductReview[];
 }
 
+export type ProductCardData = Pick<
+  Product,
+  "id" | "slug" | "name" | "price" | "mrp" | "rating" | "reviewCount" | "gallery"
+>;
+
 const mountingSpec = { label: "Mounting", value: "Ready-to-hang with pre-drilled holes and included hardware" };
 const originSpec = { label: "Country of Origin", value: "India — handcrafted by skilled artisans" };
 const warrantySpec = { label: "Warranty", value: "6 months against manufacturing defects" };

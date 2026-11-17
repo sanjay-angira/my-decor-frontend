@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   CUSTOMER: {
     BANNERS: "customer/banners",
     CATEGORIES: "customer/categories",
+    STORE_FILTERS: "customer/store-filters",
     PRODUCTS: "customer/all-products",
     PRODUCT_BY_SLUG: (slug: string) =>
       `customer/product/${encodeURIComponent(slug)}`,

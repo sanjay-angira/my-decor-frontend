@@ -1,12 +1,14 @@
 import { ProductCard } from "../ProductCard";
 import SectionHeading from "./homePageUtilis/SectionHeading";
-import type { Product } from "@/data/products";
+import type { ProductCardData } from "@/data/products";
 
 type BestSellersProps = {
-  products: Product[];
+  products: ProductCardData[];
 };
 
 function BestSellers({products}: BestSellersProps) {
+  if (!products.length) return null;
+
   return (
     <section className="page-width content-section" id="best-sellers">
       <SectionHeading title="Best Sellers" href="#new-arrivals" />

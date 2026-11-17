@@ -1,11 +1,34 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { ProductCard } from "@/components/ProductCard";
-import type { Product } from "@/data/products";
+import type { ProductCardData } from "@/data/products";
+import { fetchRecentlyViewedProducts } from "@/services/recentlyViewedService";
 
-type RecentlyViewedProps = {
-  products: Product[];
-};
+export function RecentlyViewed() {
+  const [products, setProducts] = useState<ProductCardData[] | null>(null);
 
-export function RecentlyViewed({ products }: RecentlyViewedProps) {
+  useEffect(() => {
+    let active = true;
+
+    fetchRecentlyViewedProducts()
+      .then((recentProducts) => {
+        if (active) setProducts(recentProducts);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          console.error("Failed to load recently viewed products.", error);
+          setProducts([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!products?.length) return null;
+
   return (
     <section className="page-width content-section" id="recently-viewed" aria-labelledby="recently-viewed-heading">
       <div className="section-heading">

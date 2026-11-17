@@ -113,6 +113,7 @@ export function SiteHeader() {
             {navItems.map(([label, href]) => (
               <Link href={href} key={label}>{label}{["Wall Art", "Planters"].includes(label) && <Icon name="chevronDown" />}</Link>
             ))}
+              <Link href="/products">All Products</Link>
             <Link href="/#shop-by-room">More <Icon name="chevronDown" /></Link>
           </div>
           <Link className="all-categories" href="/#categories">View All Categories</Link>
@@ -137,6 +138,7 @@ export function SiteHeader() {
               <div className="mobile-menu-content">
                 <nav className="mobile-quick-links" aria-label="Quick links">
                   <Link href="/#featured" onClick={() => setMenuOpen(false)}><Icon name="sparkles" /> Offers</Link>
+                  <Link href="/products" onClick={() => setMenuOpen(false)}><Icon name="tag" /> All Products</Link>
                   <Link href="/" onClick={() => setMenuOpen(false)}><Icon name="home" /> Store</Link>
                 </nav>
                 <h2 className="mobile-menu-section-title">

@@ -7,7 +7,8 @@ import { Icon } from "@/components/Icon";
 export type HeroSlide = {
   id: number;
   title:string;
-  slug: string;
+  slug?: string;
+  href?: string;
   desktopImage: string;
   tabletImage: string;
   mobileImage: string;
@@ -46,7 +47,7 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
             <article className="hero-slide hero-slide-full" key={slide.id}>
               <Link
                 className="hero-full-link"
-                href={`/${slide.slug}`}
+                href={slide.href || (slide.slug ? `/${slide.slug}` : "/products")}
               >
                 <picture>
                   <source
@@ -59,7 +60,7 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
                   />
                   <img
                     src={slide.desktopImage}
-                    alt="no-image-found"
+                    alt={slide.title || "Featured collection"}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
                 </picture>

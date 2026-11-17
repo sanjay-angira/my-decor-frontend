@@ -1,9 +1,4 @@
 import { RecentlyViewed } from "@/components/homepage/RecentlyViewed";
-import {
-  bestSellerSlugs,
-  getProductsBySlugs,
-  newArrivalSlugs,
-} from "@/data/products";
 import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
 import TrustedBy from "@/components/homepage/TrustedBy";
 import Newsletter from "@/components/homepage/Newsletter";
@@ -15,14 +10,14 @@ import FeaturedCollection from "@/components/homepage/FeaturedCollection";
 import TrustBadges from "@/components/homepage/TrustBadges";
 import CategoryTiles from "@/components/homepage/CategoryTiles";
 import CategoryCircles from "@/components/homepage/CategoryCircles";
-import { fetchHomepageBanners } from "@/services/homepageService";
+import {
+  fetchHomepageBanners,
+  fetchHomepageProducts,
+} from "@/services/homepageService";
 
 export const dynamic = "force-dynamic";
 
 const image = (name: string) => `/images/${name}.jpg`;
-
-const bestSellers = getProductsBySlugs(bestSellerSlugs);
-const newArrivals = getProductsBySlugs(newArrivalSlugs);
 
 const categories = [
   ["Wall Art", "art_tree"],
@@ -66,12 +61,20 @@ const rooms = [
 ];
 
 export default async function Home() {
-  let heroSlides: HeroSlide[] = [];
-  try {
-    heroSlides = await fetchHomepageBanners(); 
-  } catch (error) {
-    console.error("Failed to load homepage banners on the server.", error);
-  }
+  const [heroSlides, bestSellers, newArrivals] = await Promise.all([
+    fetchHomepageBanners().catch((error) => {
+      console.error("Failed to load homepage banners on the server.", error);
+      return [] as HeroSlide[];
+    }),
+    fetchHomepageProducts("bestSellers").catch((error) => {
+      console.error("Failed to load best sellers on the server.", error);
+      return [];
+    }),
+    fetchHomepageProducts("newArrivals").catch((error) => {
+      console.error("Failed to load new arrivals on the server.", error);
+      return [];
+    }),
+  ]);
 
   return (
     <main>
@@ -84,7 +87,7 @@ export default async function Home() {
       <MidBanner />
       <ShopByRoom rooms={rooms} />
       <NewArrivals products={newArrivals} />
-      <RecentlyViewed products={bestSellers} />
+      <RecentlyViewed />
       <Newsletter />
       <TrustedBy />
     </main>

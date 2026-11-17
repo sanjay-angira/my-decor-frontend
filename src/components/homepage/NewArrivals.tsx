@@ -1,12 +1,14 @@
 
 import { ProductCard } from "@/components/ProductCard";
-import type { Product } from "@/data/products";
+import type { ProductCardData } from "@/data/products";
 import SectionHeading from "./homePageUtilis/SectionHeading";
 type NewArrivalsProps = {
-  products: Product[];
+  products: ProductCardData[];
 };
 
 const NewArrivals = ({ products }: NewArrivalsProps) => {
+  if (!products.length) return null;
+
   return (
     <section className="page-width content-section" id="new-arrivals">
       <SectionHeading title="New Arrivals" href="#footer" />
