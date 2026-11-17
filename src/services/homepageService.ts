@@ -59,7 +59,12 @@ export type StoreProductsPage = {
 };
 
 export type StoreFilters = {
-  categories: { id: number; name: string; parentId: number | null }[];
+  categories: {
+    id: number;
+    name: string;
+    slug?: string | null;
+    parentId: number | null;
+  }[];
   priceRange: { min: number; max: number };
   banners: {
     id: string;
@@ -70,6 +75,24 @@ export type StoreFilters = {
     mobileImage: string | null;
     link: string;
   }[];
+};
+
+export type StoreCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  desktopBanner: string | null;
+};
+
+type StoreCategoriesResponse = {
+  rows?: Array<{
+    id: number;
+    name: string;
+    slug?: string | null;
+    description?: string | null;
+    desktopBanner?: string | null;
+  }>;
 };
 
 const API_BASE_URL =
@@ -164,6 +187,41 @@ export async function fetchStoreFilters(): Promise<StoreFilters> {
   }
 
   return payload.data;
+}
+
+export async function fetchStoreCategoryBySlug(
+  slug: string,
+): Promise<StoreCategory | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.CATEGORIES}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(`Store categories request failed with status ${response.status}.`);
+  }
+
+  const payload = (await response.json()) as ApiSuccessResponse<StoreCategoriesResponse>;
+  if (!payload.success || !Array.isArray(payload.data?.rows)) {
+    throw new Error("Store categories response was invalid.");
+  }
+
+  const category = payload.data.rows.find(
+    (item) => item.slug?.trim().toLowerCase() === slug.trim().toLowerCase(),
+  );
+  if (!category || !category.slug) return null;
+  const description = (category.description || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return {
+    id: category.id,
+    name: category.name,
+    slug: category.slug,
+    description: description.toLowerCase().startsWith("no descr") ? "" : description,
+    desktopBanner: category.desktopBanner || null,
+  };
 }
 
 export async function fetchHomepageBanners(): Promise<HomepageBanner[]> {

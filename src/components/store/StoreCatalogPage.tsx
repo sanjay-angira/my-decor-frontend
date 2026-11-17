@@ -1,21 +1,25 @@
-import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { AutoSubmitFilterForm } from "@/components/AutoSubmitFilterForm";
+import { PriceRangeFilter } from "@/components/PriceRangeFilter";
 import { ProductCard } from "@/components/ProductCard";
 import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
 import {
   fetchStoreFilters,
   fetchStoreProducts,
+  type StoreCategory,
   type StoreProductsQuery,
 } from "@/services/homepageService";
 
-export const metadata: Metadata = {
-  title: "Shop All Products | India Decor",
-  description:
-    "Explore the complete India Decor collection of metal wall art and home décor.",
+type StoreCatalogPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  category?: StoreCategory;
 };
 
-type ProductsPageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+type ActiveFilter = {
+  id: string;
+  label: string;
+  href: string;
 };
 
 const pageSize = 24;
@@ -45,7 +49,7 @@ function isChecked(value: string | undefined): boolean {
   return value === "true" || value === "1" || value === "on";
 }
 
-function productsPageHref(
+function storePageHref(
   page: number,
   state: {
     search: string;
@@ -58,6 +62,7 @@ function productsPageHref(
     featured: boolean;
     bestDeals: boolean;
   },
+  pathname: string,
 ): string {
   const params = new URLSearchParams({
     page: String(page),
@@ -73,10 +78,17 @@ function productsPageHref(
   if (state.newArrivals) params.set("newArrivals", "true");
   if (state.featured) params.set("featured", "true");
   if (state.bestDeals) params.set("bestDeals", "true");
-  return `/products?${params}`;
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
 }
 
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+export async function StoreCatalogPage({
+  searchParams,
+  category,
+}: StoreCatalogPageProps) {
+  const pagePath = category
+    ? `/category/${encodeURIComponent(category.slug)}`
+    : "/products";
   const query = await searchParams;
   const filters = await fetchStoreFilters();
   const search = firstValue(query.search).trim();
@@ -86,7 +98,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     : 1;
   const requestedSort = firstValue(query.sortBy);
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
-  const categoryIds = [
+  const selectedCategoryIds = category ? [] : [
     ...new Set(
       allValues(query.categoryIds)
         .flatMap((value) => value.split(","))
@@ -94,6 +106,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         .filter((id) => Number.isInteger(id) && id > 0),
     ),
   ];
+  const categoryIds = category ? [category.id] : selectedCategoryIds;
   const rangeMin = Number(filters.priceRange.min) || 0;
   const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
   const requestedMinPrice = parseOptionalNumber(firstValue(query.minPrice));
@@ -108,6 +121,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const newArrivals = isChecked(firstValue(query.newArrivals));
   const featured = isChecked(firstValue(query.featured));
   const bestDeals = isChecked(firstValue(query.bestDeals));
+  const filterFormKey = JSON.stringify({
+    pagePath,
+    search,
+    sortBy,
+    selectedCategoryIds,
+    minPrice,
+    maxPrice,
+    minRating,
+    newArrivals,
+    featured,
+    bestDeals,
+  });
   const result = await fetchStoreProducts({
     pageNumber,
     pageSize,
@@ -122,12 +147,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     bestDeals,
   });
   const pageCount = Math.ceil(result.count / pageSize);
-  const firstProduct = result.count === 0 ? 0 : (pageNumber - 1) * pageSize + 1;
-  const lastProduct = Math.min(pageNumber * pageSize, result.count);
   const paginationState = {
     search,
     sortBy,
-    categoryIds,
+    categoryIds: selectedCategoryIds,
     minPrice,
     maxPrice,
     minRating,
@@ -135,6 +158,87 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     featured,
     bestDeals,
   };
+  const filterHref = (updates: Partial<typeof paginationState>) =>
+    storePageHref(1, { ...paginationState, ...updates }, pagePath);
+  const activeFilters: ActiveFilter[] = [];
+
+  if (newArrivals) {
+    activeFilters.push({
+      id: "new-arrivals",
+      label: "New Arrivals",
+      href: filterHref({ newArrivals: false }),
+    });
+  }
+  if (bestDeals) {
+    activeFilters.push({
+      id: "best-deals",
+      label: "Best Deals",
+      href: filterHref({ bestDeals: false }),
+    });
+  }
+  for (const categoryId of selectedCategoryIds) {
+    const categoryOption = filters.categories.find(({ id }) => id === categoryId);
+    activeFilters.push({
+      id: `category-${categoryId}`,
+      label: categoryOption?.name || `Category ${categoryId}`,
+      href: filterHref({
+        categoryIds: selectedCategoryIds.filter((id) => id !== categoryId),
+      }),
+    });
+  }
+  if (featured) {
+    activeFilters.push({
+      id: "featured",
+      label: "Featured Products",
+      href: filterHref({ featured: false }),
+    });
+  }
+  if (minPrice !== undefined || maxPrice !== undefined) {
+    const formatPrice = (value: number) =>
+      `₹${value.toLocaleString("en-IN")}`;
+    const priceLabel =
+      minPrice !== undefined && maxPrice !== undefined
+        ? `Price: ${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`
+        : minPrice !== undefined
+          ? `Price from ${formatPrice(minPrice)}`
+          : `Price up to ${formatPrice(maxPrice ?? rangeMax)}`;
+    activeFilters.push({
+      id: "price",
+      label: priceLabel,
+      href: filterHref({ minPrice: undefined, maxPrice: undefined }),
+    });
+  }
+  if (minRating !== undefined) {
+    activeFilters.push({
+      id: "rating",
+      label: `${minRating}+ stars`,
+      href: filterHref({ minRating: undefined }),
+    });
+  }
+  if (sortBy !== "newest") {
+    const sortLabels: Record<
+      NonNullable<StoreProductsQuery["sortBy"]>,
+      string
+    > = {
+      newest: "Newest",
+      price_asc: "Price: Low to High",
+      price_desc: "Price: High to Low",
+      name_asc: "Name: A to Z",
+      discount_desc: "Best Discount",
+    };
+    activeFilters.push({
+      id: "sort",
+      label: sortLabels[sortBy],
+      href: filterHref({ sortBy: "newest" }),
+    });
+  }
+  if (search) {
+    activeFilters.push({
+      id: "search",
+      label: `Search: ${search}`,
+      href: filterHref({ search: "" }),
+    });
+  }
   const heroSlides: HeroSlide[] = filters.banners.flatMap((banner, index) => {
     const desktopImage =
       banner.desktopImage ||
@@ -144,12 +248,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       "";
     if (!desktopImage) return [];
     const categoryId = /^category-(\d+)$/.exec(banner.id)?.[1];
+    const bannerCategory = categoryId
+      ? filters.categories.find((item) => item.id === Number(categoryId))
+      : undefined;
     return [{
       id: index + 1,
       title: banner.title,
-      href: categoryId
-        ? `/products?categoryIds=${categoryId}`
-        : "/products",
+      href: bannerCategory?.slug
+        ? `/category/${encodeURIComponent(bannerCategory.slug)}`
+        : categoryId
+          ? `/products?categoryIds=${categoryId}`
+          : "/products",
       desktopImage,
       tabletImage: banner.tabletImage || desktopImage,
       mobileImage: banner.mobileImage || banner.tabletImage || desktopImage,
@@ -158,46 +267,55 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <main className="store-page">
-      <HeroBanner slides={heroSlides} />
+      {!category && <HeroBanner slides={heroSlides} />}
 
       <div className="container-page store-content">
+        {category?.desktopBanner && (
+          <div className="store-category-banner">
+            <Image
+              src={category.desktopBanner}
+              alt={`${category.name} collection`}
+              fill
+              sizes="100vw"
+              priority
+              unoptimized
+            />
+          </div>
+        )}
+
         <nav className="store-breadcrumb" aria-label="Breadcrumb">
           <Link href="/">Home</Link>
           <span aria-hidden="true">›</span>
-          <span>All Products</span>
+          {category ? (
+            <>
+              <Link href="/products">All Products</Link>
+              <span aria-hidden="true">›</span>
+              <span aria-current="page">{category.name}</span>
+            </>
+          ) : (
+            <span>All Products</span>
+          )}
         </nav>
 
         <div className="store-layout">
           <aside className="store-sidebar" aria-label="Product filters">
-            <form action="/products" method="get">
+            <AutoSubmitFilterForm action={pagePath} key={filterFormKey}>
               <input type="hidden" name="search" value={search} />
+              {categoryIds
+                .filter((id) => category && id === category.id)
+                .map((id) => (
+                  <input type="hidden" name="categoryIds" value={id} key={id} />
+                ))}
 
               <fieldset className="store-filter-group">
                 <legend>Price</legend>
-                <div className="store-price-values">
-                  <label>
-                    <span>From</span>
-                    <input
-                      type="number"
-                      name="minPrice"
-                      min={rangeMin}
-                      max={rangeMax}
-                      placeholder={`₹${rangeMin.toLocaleString("en-IN")}`}
-                      defaultValue={minPrice}
-                    />
-                  </label>
-                  <label>
-                    <span>To</span>
-                    <input
-                      type="number"
-                      name="maxPrice"
-                      min={rangeMin}
-                      max={rangeMax}
-                      placeholder={`₹${rangeMax.toLocaleString("en-IN")}`}
-                      defaultValue={maxPrice}
-                    />
-                  </label>
-                </div>
+                <PriceRangeFilter
+                  key={`${minPrice ?? ""}-${maxPrice ?? ""}`}
+                  min={rangeMin}
+                  max={rangeMax}
+                  selectedMin={minPrice}
+                  selectedMax={maxPrice}
+                />
               </fieldset>
 
               <fieldset className="store-filter-group">
@@ -232,24 +350,26 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 </label>
               </fieldset>
 
-              <fieldset className="store-filter-group store-category-filter">
-                <legend>Product Categories</legend>
-                {filters.categories.map((category) => (
-                  <label
-                    className="store-check-option"
-                    data-child={category.parentId !== null}
-                    key={category.id}
-                  >
-                    <input
-                      type="checkbox"
-                      name="categoryIds"
-                      value={category.id}
-                      defaultChecked={categoryIds.includes(category.id)}
-                    />
-                    <span>{category.name}</span>
-                  </label>
-                ))}
-              </fieldset>
+              {!category && (
+                <fieldset className="store-filter-group store-category-filter">
+                  <legend>Product Categories</legend>
+                  {filters.categories.map((categoryOption) => (
+                    <label
+                      className="store-check-option"
+                      data-child={categoryOption.parentId !== null}
+                      key={categoryOption.id}
+                    >
+                      <input
+                        type="checkbox"
+                        name="categoryIds"
+                        value={categoryOption.id}
+                        defaultChecked={selectedCategoryIds.includes(categoryOption.id)}
+                      />
+                      <span>{categoryOption.name}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
 
               <fieldset className="store-filter-group">
                 <legend>Customer Rating</legend>
@@ -266,51 +386,42 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 ))}
               </fieldset>
 
-              <div className="store-filter-actions">
-                <button className="products-submit" type="submit">Apply Filters</button>
-                <Link href="/products">Clear all</Link>
-              </div>
-            </form>
+            </AutoSubmitFilterForm>
           </aside>
 
           <section className="store-results" aria-labelledby="store-title">
             <header className="store-results-heading">
               <div>
                 <p className="products-eyebrow">THE INDIA DÉCOR</p>
-                <h1 id="store-title">Home decor store</h1>
-                <p>Shop curated wall art and modern decor for every room.</p>
+                <h1 id="store-title">{category?.name || "Home decor store"}</h1>
+                {category ? (
+                  category.description && <p>{category.description}</p>
+                ) : (
+                  <p>Shop curated wall art and modern decor for every room.</p>
+                )}
               </div>
-              <label className="store-search">
-                <span className="visually-hidden">Search products</span>
-                <input
-                  form="store-search-form"
-                  type="search"
-                  name="search"
-                  placeholder="Search products"
-                  defaultValue={search}
-                />
-              </label>
-              <form id="store-search-form" action="/products" method="get">
-                <input type="hidden" name="sortBy" value={sortBy} />
-                {categoryIds.map((id) => (
-                  <input type="hidden" name="categoryIds" value={id} key={id} />
-                ))}
-                {newArrivals && <input type="hidden" name="newArrivals" value="true" />}
-                {featured && <input type="hidden" name="featured" value="true" />}
-                {bestDeals && <input type="hidden" name="bestDeals" value="true" />}
-                {minPrice !== undefined && <input type="hidden" name="minPrice" value={minPrice} />}
-                {maxPrice !== undefined && <input type="hidden" name="maxPrice" value={maxPrice} />}
-                {minRating !== undefined && <input type="hidden" name="minRating" value={minRating} />}
-              </form>
             </header>
 
-            <div className="store-results-meta" aria-live="polite">
-              {result.count > 0
-                ? `Showing ${firstProduct}–${lastProduct} of ${result.count} products`
-                : search
-                  ? `No products found for “${search}”`
-                  : "No products available yet"}
-            </div>
+            {activeFilters.length > 0 && (
+              <div className="store-active-filters" aria-label="Active filters">
+                {activeFilters.map((filter) => (
+                  <Link
+                    className="store-active-filter"
+                    href={filter.href}
+                    key={filter.id}
+                    aria-label={`Remove ${filter.label} filter`}
+                  >
+                    <span>{filter.label}</span>
+                    <span className="store-active-filter-remove" aria-hidden="true">
+                      ×
+                    </span>
+                  </Link>
+                ))}
+                <Link className="store-clear-filters" href={pagePath}>
+                  Clear Filters
+                </Link>
+              </div>
+            )}
 
             {result.products.length > 0 ? (
               <div className="product-grid catalog-grid">
@@ -325,14 +436,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             ) : (
               <div className="products-empty">
                 <p>We couldn&apos;t find any products matching these filters.</p>
-                <Link href="/products">Clear filters</Link>
               </div>
             )}
 
             {pageCount > 1 && (
               <nav className="products-pagination" aria-label="Product pages">
                 {pageNumber > 1 ? (
-                  <Link href={productsPageHref(pageNumber - 1, paginationState)}>
+                  <Link href={storePageHref(pageNumber - 1, paginationState, pagePath)}>
                     Previous
                   </Link>
                 ) : (
@@ -340,7 +450,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 )}
                 <span>Page {pageNumber} of {pageCount}</span>
                 {pageNumber < pageCount ? (
-                  <Link href={productsPageHref(pageNumber + 1, paginationState)}>
+                  <Link href={storePageHref(pageNumber + 1, paginationState, pagePath)}>
                     Next
                   </Link>
                 ) : (
