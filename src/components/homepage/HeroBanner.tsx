@@ -7,14 +7,22 @@ import { Icon } from "@/components/Icon";
 export type HeroSlide = {
   id: number;
   source: string;
-  title:string;
+  title: string;
   slug: string;
   desktopImage: string;
   tabletImage: string;
   mobileImage: string;
+  href?: string | null;
 };
 
-const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
+const HeroBanner = ({
+  slides,
+  ariaLabel = "Featured collections",
+}: {
+  slides: HeroSlide[];
+  ariaLabel?: string;
+}) => {
+  console.log("Rendering HeroBanner with slides:", slides);
   const sliderRef = useRef<Slider | null>(null);
 
   const settings: Settings = {
@@ -37,36 +45,46 @@ const HeroBanner = ({ slides }: { slides: HeroSlide[] }) => {
   if (!slides.length) return null;
 
   return (
-    <section
-      className="page-width hero-section"
-      aria-label="Featured collections"
-    >
+    <section className="page-width hero-section" aria-label={ariaLabel}>
       <div className="hero">
         <Slider ref={sliderRef} {...settings}>
-          {slides.map((slide, index) => (
-            <article className="hero-slide hero-slide-full" key={slide.id}>
-              <Link
-                className="hero-full-link"
-                href={slide.source === 'category' ? `/category/${slide.slug}` : `/products?offer=${slide.slug}`}
-              >
-                <picture>
-                  <source
-                    media="(max-width: 767px)"
-                    srcSet={slide.mobileImage || slide.desktopImage}
-                  />
-                  <source
-                    media="(max-width: 1199px)"
-                    srcSet={slide.tabletImage || slide.desktopImage}
-                  />
-                  <img
-                    src={slide.desktopImage}
-                    alt={slide.title || "Featured collection"}
-                    loading={index === 0 ? "eager" : "lazy"}
-                  />
-                </picture>
-              </Link>
-            </article>
-          ))}
+          {slides.map((slide, index) => {
+            const fallbackHref = slide.slug.trim()
+              ? slide.source === "category"
+                ? `/products?category=${encodeURIComponent(slide.slug)}`
+                : `/products?offer=${encodeURIComponent(slide.slug)}`
+              : null;
+            const href = slide.href === null ? null : slide.href || fallbackHref;
+            const image = (
+              <picture>
+                <source
+                  media="(max-width: 767px)"
+                  srcSet={slide.mobileImage || slide.desktopImage}
+                />
+                <source
+                  media="(max-width: 1199px)"
+                  srcSet={slide.tabletImage || slide.desktopImage}
+                />
+                <img
+                  src={slide.desktopImage}
+                  alt={slide.title || "Featured collection"}
+                  loading={index === 0 ? "eager" : "lazy"}
+                />
+              </picture>
+            );
+
+            return (
+              <article className="hero-slide hero-slide-full" key={slide.id}>
+                {href ? (
+                  <Link className="hero-full-link" href={href}>
+                    {image}
+                  </Link>
+                ) : (
+                  image
+                )}
+              </article>
+            );
+          })}
         </Slider>
         {slides.length > 1 && (
           <>

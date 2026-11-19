@@ -23,16 +23,21 @@ export function PriceRangeFilter({
     min: selectedMin ?? min,
     max: selectedMax ?? max,
   });
-  const range = max - min;
+  const range = Math.max(0, max - min);
   const minPosition = range > 0 ? ((priceRange.min - min) / range) * 100 : 0;
   const maxPosition = range > 0 ? ((priceRange.max - min) / range) * 100 : 100;
-  const step = Math.max(1, Math.ceil(range / 1000));
+  const step =
+    min % 1000 === 0 && range % 1000 === 0
+      ? 1000
+      : Math.max(1, Math.ceil(range / 100));
+  const minDistance =
+    range >= 1000 ? 1000 : Math.max(1, Math.ceil(range / 10));
 
   const handleMinChange = (event: ChangeEvent<HTMLInputElement>) => {
     const value = Number(event.currentTarget.value);
     setPriceRange((current) => ({
       ...current,
-      min: Math.min(value, current.max),
+      min: Math.max(min, Math.min(value, current.max - minDistance)),
     }));
   };
 
@@ -40,7 +45,7 @@ export function PriceRangeFilter({
     const value = Number(event.currentTarget.value);
     setPriceRange((current) => ({
       ...current,
-      max: Math.max(value, current.min),
+      max: Math.min(max, Math.max(value, current.min + minDistance)),
     }));
   };
 

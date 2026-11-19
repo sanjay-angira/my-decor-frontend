@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   Suspense,
   useCallback,
@@ -11,7 +10,10 @@ import {
 } from "react";
 import { useParams, usePathname } from "next/navigation";
 import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
-import { StoreFiltersPanel } from "@/components/store/StoreFiltersPanel";
+import {
+  StoreFiltersPanel,
+  StoreFiltersSkeleton,
+} from "@/components/store/StoreFiltersPanel";
 import { StoreMobileFilterButton } from "@/components/store/StoreMobileFilterButton";
 import {
   FilterContext,
@@ -99,9 +101,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
           return;
         }
 
-        const categoriesResponse = await getData<
-          ApiSuccessResponse<StoreCategoriesResponse>
-        >(API_ENDPOINTS.CUSTOMER.CATEGORIES, undefined, { auth: false });
+        const categoriesResponse = await getData<ApiSuccessResponse<StoreCategoriesResponse>>(API_ENDPOINTS.CUSTOMER.CATEGORIES, undefined, { auth: false });
 
         if (!cancelled && categoriesResponse.success) {
           const match = categoriesResponse.data?.rows?.find(
@@ -192,27 +192,51 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
   }, [currentSlug, filters]);
 
   const categoryHeroSlides = useMemo<HeroSlide[]>(() => {
-    if (!currentSlug || !category?.categoryOffers?.length) return [];
-    return category.categoryOffers.flatMap((offer, index) => {
-      const desktopImage =
-        offer.desktopImage ||
-        offer.tabletImage ||
-        offer.mobileImage ||
-        "";
-      if (!desktopImage || !offer.slug?.trim()) return [];
-      return [
-        {
-          id: index + 1,
-          source: "offer",
-          title: offer.name,
-          slug: offer.slug.trim(),
-          desktopImage,
-          tabletImage: offer.tabletImage || desktopImage,
-          mobileImage: offer.mobileImage || offer.tabletImage || desktopImage,
-        },
-      ];
-    });
+    if (!currentSlug || !category) return [];
+
+    const offerSlides = (category.categoryOffers ?? []).flatMap(
+      (offer, index) => {
+        const desktopImage =
+          offer.desktopImage ||
+          offer.tabletImage ||
+          offer.mobileImage ||
+          "";
+        if (!desktopImage || !offer.slug?.trim()) return [];
+        return [
+          {
+            id: index + 1,
+            source: "offer",
+            title: offer.name,
+            slug: offer.slug.trim(),
+            desktopImage,
+            tabletImage: offer.tabletImage || desktopImage,
+            mobileImage:
+              offer.mobileImage || offer.tabletImage || desktopImage,
+          },
+        ];
+      },
+    );
+    if (offerSlides.length) return offerSlides;
+
+    const desktopImage = category.desktopBanner?.trim();
+    if (!desktopImage) return [];
+    return [
+      {
+        id: category.id,
+        source: "category",
+        title: category.name,
+        slug: category.slug,
+        href: null,
+        desktopImage,
+        tabletImage: desktopImage,
+        mobileImage: desktopImage,
+      },
+    ];
   }, [category, currentSlug]);
+  const displayedHeroSlides = currentSlug ? categoryHeroSlides : heroSlides;
+  const heroAriaLabel = currentSlug && category
+    ? `${category.name} collection banner`
+    : "Featured collections";
 
   const contextValue = useMemo<FilterContextType>(
     () => ({
@@ -229,25 +253,18 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
   return (
     <FilterContext.Provider value={contextValue}>
       <main className="store-page">
-        {!currentSlug && <HeroBanner slides={heroSlides} />}
-        {currentSlug && categoryHeroSlides.length > 0 && (
-          <HeroBanner slides={categoryHeroSlides} />
-        )}
+        {displayedHeroSlides.length > 0 ? (
+          <HeroBanner
+            slides={displayedHeroSlides}
+            ariaLabel={heroAriaLabel}
+          />
+        ) : isLoading ? (
+          <div className="page-width hero-section" aria-hidden="true">
+            <div className="store-skeleton-block store-hero-skeleton" />
+          </div>
+        ) : null}
 
         <div className="container-page store-content">
-          {category?.desktopBanner && categoryHeroSlides.length === 0 && (
-            <div className="store-category-banner">
-              <Image
-                src={category.desktopBanner}
-                alt={`${category.name} collection`}
-                fill
-                sizes="100vw"
-                priority
-                unoptimized
-              />
-            </div>
-          )}
-
           <div className="store-mobile-filters-bar">
             <StoreMobileFilterButton />
           </div>
@@ -258,7 +275,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
               aria-label="Product filters"
               data-open={toggleFilters ? "true" : "false"}
             >
-              <Suspense fallback={<div className="store-filters-loading">Loading filters…</div>}>
+              <Suspense fallback={<StoreFiltersSkeleton />}>
                 <StoreFiltersPanel />
               </Suspense>
             </aside>

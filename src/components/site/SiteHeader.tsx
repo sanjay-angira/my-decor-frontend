@@ -30,16 +30,20 @@ type HeaderCategoriesResponse =
       rows?: HeaderCategory[];
     };
 
+const HEADER_HIDE_THRESHOLD = 120;
+const HEADER_SHOW_THRESHOLD = 20;
+
 function categoryHref(category: HeaderCategory): string {
   const slug = category.slug?.trim();
   return slug
     ? `/category/${encodeURIComponent(slug)}`
-    : `/products?categoryIds=${category.id}`;
+    : "/products";
 }
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState<HeaderCategory[]>([]);
 
   useEffect(() => {
@@ -80,6 +84,19 @@ export function SiteHeader() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const updateScrollState = () => {
+      const scrollY = window.scrollY;
+      setIsScrolled((scrolled) =>
+        scrollY > (scrolled ? HEADER_SHOW_THRESHOLD : HEADER_HIDE_THRESHOLD),
+      );
+    };
+
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
+
   const topLevelCategories = categories.filter(
     (category) => category.parentId === null || category.parentId === undefined,
   );
@@ -103,7 +120,7 @@ export function SiteHeader() {
   }, [menuOpen]);
 
   return (
-    <header className="site-header">
+    <header className={`site-header${isScrolled ? " is-scrolled" : ""}`}>
       <div className="announcement">
         <div className="page-width announcement-inner">
           <p>Sculptural Metal Wall Art – Bring Positivity to Your Space</p>
@@ -124,7 +141,6 @@ export function SiteHeader() {
           </label>
           <div className="header-actions">
             <Link className="header-action-label" href="/#featured"><Icon name="sparkles" /> Offers</Link>
-            <Link className="header-action-label" href="/#footer"><Icon name="tag" /> Track Order</Link>
             <button
               className="icon-button mobile-search-button"
               type="button"
@@ -138,7 +154,9 @@ export function SiteHeader() {
             <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
               <Icon name="bag" /><span className="cart-count">2</span>
             </button>
-            <button className="sign-in" type="button"><Icon name="user" /> Sign In</button>
+            <button className="icon-button header-wishlist-button sign-in" type="button" aria-label="Sign in" title="Sign in">
+              <Icon name="user" />
+            </button>
             <button className="icon-button mobile-account-button" type="button" aria-label="Sign in">
               <Icon name="user" />
             </button>
@@ -166,6 +184,7 @@ export function SiteHeader() {
           </div>
         )}
 
+        <div className="category-navigation-divider" aria-hidden="true" />
         <nav className="page-width category-navigation" aria-label="Categories">
           <div className="category-nav-links">
             {headerCategories.map((category) => (
@@ -175,7 +194,7 @@ export function SiteHeader() {
             ))}
             <Link href="/products">All Products</Link>
           </div>
-          <Link className="all-categories" href="/#categories">View All Categories</Link>
+          <Link className="all-categories" href="/categories">View All Categories</Link>
         </nav>
 
         {menuOpen && typeof document !== "undefined" && createPortal(
@@ -211,7 +230,7 @@ export function SiteHeader() {
                   ))}
                   <Link href="/products" onClick={() => setMenuOpen(false)}>All Products</Link>
                 </nav>
-                <Link className="mobile-all-categories" href="/#categories" onClick={() => setMenuOpen(false)}>
+                <Link className="mobile-all-categories" href="/categories" onClick={() => setMenuOpen(false)}>
                   View All Categories
                 </Link>
                 <Link className="mobile-menu-logo" href="/" aria-label="India Decor home" onClick={() => setMenuOpen(false)}>

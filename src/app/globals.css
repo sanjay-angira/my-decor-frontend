@@ -6,6 +6,7 @@
 @import "../styles/site-footer.css";
 @import "../styles/hero.css";
 @import "../styles/category-circles.css";
+@import "../styles/category-directory.css";
 @import "../styles/category-tiles.css";
 @import "../styles/trust-badges.css";
 @import "../styles/section.css";
@@ -30,7 +31,7 @@
   --radius-2xl: 32px;
   --radius-3xl: 36px;
   --radius-full: 9999px;
-  --background: oklch(0.981 0.007 95);
+  --background: hsl(51, 41%, 97%);
   --foreground: oklch(0.245 0.014 75);
   --card: oklch(1 0 0);
   --muted: oklch(0.51 0.02 75);
@@ -47,6 +48,21 @@
   --accent-foreground: #01461A;
   --destructive: oklch(0.577 0.245 27.325);
   --sand: oklch(0.925 0.022 88);
+  --header-background: var(--card);
+  --header-foreground: var(--foreground);
+  --header-muted: var(--muted);
+  --header-border: var(--border);
+  --header-surface: var(--secondary);
+  --header-accent: var(--brand);
+  --header-accent-foreground: var(--brand-foreground);
+  --header-action-background: var(--primary);
+  --header-action-foreground: var(--primary-foreground);
+  --header-search-background: var(--secondary);
+  --header-search-foreground: var(--muted);
+  --header-search-border: var(--border);
+  --header-overlay: rgb(0 0 0 / 42%);
+  --header-shadow: rgb(0 0 0 / 18%);
+  --header-control-hover: rgb(255 255 255 / 14%);
   --font-body: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-outfit), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
 }

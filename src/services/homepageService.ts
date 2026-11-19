@@ -100,6 +100,15 @@ export type StoreCategory = {
   }[];
 };
 
+export type StoreCategoryDirectoryItem = {
+  id: number;
+  name: string;
+  slug: string | null;
+  image: string | null;
+  productCount: number;
+  parentId: number | null;
+};
+
 type StoreCategoriesResponse = {
   rows?: Array<{
     id: number;
@@ -107,6 +116,9 @@ type StoreCategoriesResponse = {
     slug?: string | null;
     description?: string | null;
     desktopBanner?: string | null;
+    image?: string | null;
+    productCount?: number;
+    parentId?: number | null;
     categoryOffers?: Array<{
       id: number;
       name: string;
@@ -254,6 +266,49 @@ export async function fetchStoreCategoryBySlug(
         }))
       : [],
   };
+}
+
+export async function fetchStoreCategories(): Promise<
+  StoreCategoryDirectoryItem[]
+> {
+  const response = await fetch(
+    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.CATEGORIES}`,
+    { cache: "no-store" },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Store categories request failed with status ${response.status}.`,
+    );
+  }
+
+  const payload = (await response.json()) as ApiSuccessResponse<StoreCategoriesResponse>;
+  if (!payload.success || !Array.isArray(payload.data?.rows)) {
+    throw new Error("Store categories response was invalid.");
+  }
+
+  return payload.data.rows.map((category) => {
+    if (
+      !Number.isInteger(category.id) ||
+      category.id <= 0 ||
+      !category.name?.trim()
+    ) {
+      throw new Error("Store categories response contained an invalid category.");
+    }
+
+    return {
+      id: category.id,
+      name: category.name.trim(),
+      slug: category.slug?.trim() || null,
+      image: category.image || category.desktopBanner || null,
+      productCount: Number.isFinite(category.productCount)
+        ? Math.max(0, Number(category.productCount))
+        : 0,
+      parentId:
+        category.parentId !== undefined && category.parentId !== null
+          ? Number(category.parentId)
+          : null,
+    };
+  });
 }
 
 export async function fetchHomepageBanners(): Promise<HomepageBanner[]> {

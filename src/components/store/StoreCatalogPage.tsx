@@ -6,6 +6,7 @@ import {
   type StoreCategory,
   type StoreProductsQuery,
 } from "@/services/homepageService";
+import { resolveSluggedOptions } from "@/utils/storeFilterSlugs";
 
 type StoreCatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -50,8 +51,8 @@ function storePageHref(
   state: {
     search: string;
     sortBy: NonNullable<StoreProductsQuery["sortBy"]>;
-    categoryIds: number[];
-    offerSlugs: string[];
+    categorySlugs: string[];
+    offerValues: string[];
     minPrice?: number;
     maxPrice?: number;
     minRating?: number;
@@ -66,10 +67,8 @@ function storePageHref(
     sortBy: state.sortBy,
   });
   if (state.search) params.set("search", state.search);
-  if (state.offerSlugs.length) params.set("offer", state.offerSlugs.join("/"));
-  if (state.categoryIds.length) {
-    params.set("categoryIds", state.categoryIds.join(","));
-  }
+  if (state.offerValues.length) params.set("offer", state.offerValues.join("/"));
+  state.categorySlugs.forEach((slug) => params.append("category", slug));
   if (state.minPrice !== undefined) params.set("minPrice", String(state.minPrice));
   if (state.maxPrice !== undefined) params.set("maxPrice", String(state.maxPrice));
   if (state.minRating !== undefined) params.set("minRating", String(state.minRating));
@@ -96,44 +95,43 @@ export async function StoreCatalogPage({
     : 1;
   const requestedSort = firstValue(query.sortBy);
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
-  const selectedCategoryIds = category ? [] : [
-    ...new Set(
-      allValues(query.categoryIds)
-        .flatMap((value) => value.split(","))
-        .map((value) => Number(value))
-        .filter((id) => Number.isInteger(id) && id > 0),
-    ),
-  ];
+  const selectedCategories = category
+    ? []
+    : resolveSluggedOptions(filters.categories, [
+        ...allValues(query.category),
+        ...allValues(query.categoryIds),
+      ]);
+  const selectedCategorySlugs = selectedCategories
+    .map((item) => item.slug?.trim())
+    .filter((slug): slug is string => Boolean(slug));
+  const selectedCategoryIds = selectedCategories.map((item) => item.id);
   const categoryIds = category ? [category.id] : selectedCategoryIds;
-  const offerSlugs = [
-    ...new Set(
-      allValues(query.offer)
-        .flatMap((value) => value.split("/"))
-        .map((slug) => slug.trim())
-        .filter(Boolean),
-    ),
-  ];
-  const offerIds = offerSlugs.length
-    ? filters.offers
-        ?.filter(
-          (offer) =>
-            offer.slug &&
-            offerSlugs.some(
-              (slug) => slug.toLowerCase() === offer.slug?.trim().toLowerCase(),
-            ),
-        )
-        .map((offer) => offer.id) || []
-    : [];
+  const selectedOffers = resolveSluggedOptions(
+    filters.offers,
+    allValues(query.offer),
+  );
+  const offerValues = selectedOffers
+    .map((item) => item.slug?.trim())
+    .filter((slug): slug is string => Boolean(slug));
+  const offerIds = selectedOffers.map((item) => item.id);
   const rangeMin = Number(filters.priceRange.min) || 0;
   const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
   const requestedMinPrice = parseOptionalNumber(firstValue(query.minPrice));
   const requestedMaxPrice = parseOptionalNumber(firstValue(query.maxPrice));
-  const minPrice = requestedMinPrice === undefined
+  let minPrice = requestedMinPrice === undefined
     ? undefined
     : Math.min(rangeMax, Math.max(rangeMin, requestedMinPrice));
-  const maxPrice = requestedMaxPrice === undefined
+  let maxPrice = requestedMaxPrice === undefined
     ? undefined
     : Math.min(rangeMax, Math.max(rangeMin, requestedMaxPrice));
+  if (
+    minPrice !== undefined &&
+    maxPrice !== undefined &&
+    minPrice > maxPrice
+  ) {
+    minPrice = undefined;
+    maxPrice = undefined;
+  }
   const minRating = parseOptionalNumber(firstValue(query.minRating));
   const newArrivals = isChecked(firstValue(query.newArrivals));
   const featured = isChecked(firstValue(query.featured));
@@ -156,8 +154,8 @@ export async function StoreCatalogPage({
   const paginationState = {
     search,
     sortBy,
-    categoryIds: selectedCategoryIds,
-    offerSlugs,
+    categorySlugs: selectedCategorySlugs,
+    offerValues,
     minPrice,
     maxPrice,
     minRating,
@@ -169,16 +167,15 @@ export async function StoreCatalogPage({
     storePageHref(1, { ...paginationState, ...updates }, pagePath);
   const activeFilters: ActiveFilter[] = [];
 
-  for (const offerSlug of offerSlugs) {
+  for (const offerValue of offerValues) {
     const offer = filters.offers?.find(
-      (item) =>
-        item.slug?.trim().toLowerCase() === offerSlug.toLowerCase(),
+      (item) => item.slug?.trim().toLowerCase() === offerValue.toLowerCase(),
     );
     activeFilters.push({
-      id: `offer-${offerSlug}`,
+      id: `offer-${offerValue}`,
       label: offer?.name || "Offer",
       href: filterHref({
-        offerSlugs: offerSlugs.filter((slug) => slug !== offerSlug),
+        offerValues: offerValues.filter((value) => value !== offerValue),
       }),
     });
   }
@@ -196,13 +193,17 @@ export async function StoreCatalogPage({
       href: filterHref({ bestDeals: false }),
     });
   }
-  for (const categoryId of selectedCategoryIds) {
-    const categoryOption = filters.categories.find(({ id }) => id === categoryId);
+  for (const categorySlug of selectedCategorySlugs) {
+    const categoryOption = filters.categories.find(
+      (item) => item.slug?.trim().toLowerCase() === categorySlug.toLowerCase(),
+    );
     activeFilters.push({
-      id: `category-${categoryId}`,
-      label: categoryOption?.name || `Category ${categoryId}`,
+      id: `category-${categorySlug}`,
+      label: categoryOption?.name || categorySlug,
       href: filterHref({
-        categoryIds: selectedCategoryIds.filter((id) => id !== categoryId),
+        categorySlugs: selectedCategorySlugs.filter(
+          (slug) => slug !== categorySlug,
+        ),
       }),
     });
   }

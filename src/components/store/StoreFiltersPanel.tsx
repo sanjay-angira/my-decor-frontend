@@ -5,6 +5,7 @@ import { AutoSubmitFilterForm } from "@/components/AutoSubmitFilterForm";
 import { PriceRangeFilter } from "@/components/PriceRangeFilter";
 import { useFilterContext } from "@/components/store/storeFilterContext";
 import type { StoreProductsQuery } from "@/services/homepageService";
+import { resolveSluggedOptions } from "@/utils/storeFilterSlugs";
 
 const sortOptions: NonNullable<StoreProductsQuery["sortBy"]>[] = [
   "newest",
@@ -18,10 +19,6 @@ function firstValue(value: string | null): string {
   return value ?? "";
 }
 
-function allValues(searchParams: URLSearchParams, key: string): string[] {
-  return searchParams.getAll(key);
-}
-
 function parseOptionalNumber(value: string | undefined): number | undefined {
   if (!value?.trim()) return undefined;
   const parsed = Number(value);
@@ -32,12 +29,33 @@ function isChecked(value: string | undefined): boolean {
   return value === "true" || value === "1" || value === "on";
 }
 
+export function StoreFiltersSkeleton() {
+  return (
+    <div className="store-filter-skeleton" aria-busy="true">
+      <span className="visually-hidden" role="status">
+        Loading filters
+      </span>
+      <div aria-hidden="true">
+        {["price", "sort", "types", "categories", "offers", "rating"].map(
+          (group) => (
+            <div className="store-filter-skeleton-group" key={group}>
+              <span className="store-skeleton-block store-filter-skeleton-title" />
+              <span className="store-skeleton-block store-filter-skeleton-row" />
+              <span className="store-skeleton-block store-filter-skeleton-row" />
+            </div>
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function StoreFiltersPanel() {
   const searchParams = useSearchParams();
   const { filters, category, pagePath, isLoading } = useFilterContext();
 
   if (isLoading && !filters) {
-    return <div className="store-filters-loading">Loading filters…</div>;
+    return <StoreFiltersSkeleton />;
   }
 
   if (!filters) {
@@ -45,27 +63,24 @@ export function StoreFiltersPanel() {
   }
 
   const search = firstValue(searchParams.get("search")).trim();
-  const offerSlugs = [
-    ...new Set(
-      firstValue(searchParams.get("offer"))
-        .split("/")
-        .map((slug) => slug.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const selectedOffers = resolveSluggedOptions(
+    filters.offers,
+    searchParams.getAll("offer"),
+  );
+  const offerValues = selectedOffers
+    .map((offer) => offer.slug?.trim())
+    .filter((slug): slug is string => Boolean(slug));
+  const selectedCategories = category
+    ? []
+    : resolveSluggedOptions(filters.categories, [
+        ...searchParams.getAll("category"),
+        ...searchParams.getAll("categoryIds"),
+      ]);
+  const selectedCategorySlugs = selectedCategories
+    .map((item) => item.slug?.trim().toLowerCase())
+    .filter((slug): slug is string => Boolean(slug));
   const requestedSort = firstValue(searchParams.get("sortBy"));
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
-  const selectedCategoryIds = category
-    ? []
-    : [
-        ...new Set(
-          allValues(searchParams, "categoryIds")
-            .flatMap((value) => value.split(","))
-            .map((value) => Number(value))
-            .filter((id) => Number.isInteger(id) && id > 0),
-        ),
-      ];
-  const categoryIds = category ? [category.id] : selectedCategoryIds;
   const rangeMin = Number(filters.priceRange.min) || 0;
   const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
   const requestedMinPrice = parseOptionalNumber(
@@ -74,14 +89,22 @@ export function StoreFiltersPanel() {
   const requestedMaxPrice = parseOptionalNumber(
     firstValue(searchParams.get("maxPrice")) || undefined,
   );
-  const minPrice =
+  let minPrice =
     requestedMinPrice === undefined
       ? undefined
       : Math.min(rangeMax, Math.max(rangeMin, requestedMinPrice));
-  const maxPrice =
+  let maxPrice =
     requestedMaxPrice === undefined
       ? undefined
       : Math.min(rangeMax, Math.max(rangeMin, requestedMaxPrice));
+  if (
+    minPrice !== undefined &&
+    maxPrice !== undefined &&
+    minPrice > maxPrice
+  ) {
+    minPrice = undefined;
+    maxPrice = undefined;
+  }
   const minRating = parseOptionalNumber(
     firstValue(searchParams.get("minRating")) || undefined,
   );
@@ -95,31 +118,26 @@ export function StoreFiltersPanel() {
   const filterFormKey = JSON.stringify({
     pagePath,
     search,
-    offerSlugs,
+    offerValues,
     sortBy,
-    selectedCategoryIds,
+    selectedCategorySlugs,
     minPrice,
     maxPrice,
     minRating,
     newArrivals,
     featured,
     bestDeals,
-    categoryId: category?.id ?? null,
+    categorySlug: category?.slug ?? null,
   });
 
   return (
     <AutoSubmitFilterForm action={pagePath} key={filterFormKey}>
       <input type="hidden" name="search" value={search} />
-      {categoryIds
-        .filter((id) => category && id === category.id)
-        .map((id) => (
-          <input type="hidden" name="categoryIds" value={id} key={id} />
-        ))}
 
       <fieldset className="store-filter-group">
         <legend>Price</legend>
         <PriceRangeFilter
-          key={`${minPrice ?? ""}-${maxPrice ?? ""}`}
+          key={`${rangeMin}-${rangeMax}-${minPrice ?? ""}-${maxPrice ?? ""}`}
           min={rangeMin}
           max={rangeMax}
           selectedMin={minPrice}
@@ -177,40 +195,53 @@ export function StoreFiltersPanel() {
       {!category && (
         <fieldset className="store-filter-group store-category-filter">
           <legend>Product Categories</legend>
-          {filters.categories.map((categoryOption) => (
-            <label
-              className="store-check-option"
-              data-child={categoryOption.parentId !== null}
-              key={categoryOption.id}
-            >
-              <input
-                type="checkbox"
-                name="categoryIds"
-                value={categoryOption.id}
-                defaultChecked={selectedCategoryIds.includes(categoryOption.id)}
-              />
-              <span>{categoryOption.name}</span>
-            </label>
-          ))}
+          {filters.categories.map((categoryOption) => {
+            const slug = categoryOption.slug?.trim();
+            if (!slug) return null;
+
+            return (
+              <label
+                className="store-check-option"
+                data-child={categoryOption.parentId !== null}
+                key={categoryOption.id}
+              >
+                <input
+                  type="checkbox"
+                  name="category"
+                  value={slug}
+                  defaultChecked={selectedCategorySlugs.includes(
+                    slug.toLowerCase(),
+                  )}
+                />
+                <span>{categoryOption.name}</span>
+              </label>
+            );
+          })}
         </fieldset>
       )}
 
       {filters.offers && filters.offers.length > 0 && (
         <fieldset className="store-filter-group store-offer-filter">
           <legend>Offers</legend>
-          {filters.offers.map((offer) => (
-            <label className="store-check-option" key={offer.id}>
-              <input
-                type="checkbox"
-                name="offer"
-                value={offer.slug || offer.id}
-                defaultChecked={offer.slug
-                  ? offerSlugs.includes(offer.slug)
-                  : false}
-              />
-              <span>{offer.name}</span>
-            </label>
-          ))}
+          {filters.offers.map((offer) => {
+            const slug = offer.slug?.trim();
+            if (!slug) return null;
+            const checked = offerValues.some(
+              (selected) => selected.toLowerCase() === slug.toLowerCase(),
+            );
+
+            return (
+              <label className="store-check-option" key={offer.id}>
+                <input
+                  type="checkbox"
+                  name="offer"
+                  value={slug}
+                  defaultChecked={checked}
+                />
+                <span>{offer.name}</span>
+              </label>
+            );
+          })}
         </fieldset>
       )}
 

@@ -2,22 +2,135 @@
   flex: 1;
 }
 
+.store-skeleton-block {
+  display: block;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--secondary) 25%,
+    color-mix(in srgb, var(--secondary) 55%, white) 50%,
+    var(--secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: store-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.store-hero-skeleton {
+  width: 100%;
+  aspect-ratio: 3 / 1;
+  border-radius: var(--radius);
+}
+
+.store-filter-skeleton-group {
+  display: grid;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.store-filter-skeleton-title {
+  width: 44%;
+  height: 15px;
+  margin-bottom: 3px;
+}
+
+.store-filter-skeleton-row {
+  width: 82%;
+  height: 12px;
+}
+
+.store-filter-skeleton-row:last-child {
+  width: 64%;
+}
+
+.store-results-loading .store-breadcrumb {
+  gap: 10px;
+}
+
+.store-loading-breadcrumb-home,
+.store-loading-breadcrumb-current {
+  height: 11px;
+}
+
+.store-loading-breadcrumb-home {
+  width: 38px;
+}
+
+.store-loading-breadcrumb-separator {
+  width: 8px;
+  height: 8px;
+}
+
+.store-loading-breadcrumb-current {
+  width: 74px;
+}
+
+.store-loading-heading {
+  display: grid;
+  width: min(100%, 360px);
+  gap: 10px;
+}
+
+.store-loading-eyebrow {
+  width: 82px;
+  height: 9px;
+  margin-bottom: 3px;
+}
+
+.store-loading-title {
+  width: min(100%, 248px);
+  height: 30px;
+}
+
+.store-loading-description {
+  width: min(100%, 320px);
+  height: 12px;
+}
+
+.store-loading-card {
+  min-width: 0;
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+.store-loading-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+.store-loading-card-info {
+  display: grid;
+  gap: 10px;
+}
+
+.store-loading-product-title {
+  width: 88%;
+  height: 12px;
+}
+
+.store-loading-price {
+  width: 36%;
+  height: 15px;
+}
+
+.store-loading-rating {
+  width: 54%;
+  height: 10px;
+}
+
+@keyframes store-skeleton-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
 .store-content {
   padding-top: 16px;
   padding-bottom: 56px;
-}
-
-.store-category-banner {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 1;
-  margin-bottom: 18px;
-  overflow: hidden;
-  background: var(--sand);
-}
-
-.store-category-banner img {
-  object-fit: cover;
 }
 
 .store-breadcrumb {
@@ -254,6 +367,12 @@
   padding: 8px 0;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .store-skeleton-block {
+    animation: none;
+  }
+}
+
 .store-active-filters {
   display: flex;
   flex-wrap: wrap;
@@ -317,6 +436,10 @@
 }
 
 @media (max-width: 700px) {
+  .store-hero-skeleton {
+    aspect-ratio: 4 / 3;
+  }
+
   .store-content {
     padding-top: 12px;
     padding-bottom: 40px;
