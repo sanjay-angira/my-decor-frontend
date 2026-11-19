@@ -12,15 +12,12 @@ export type HeroSlide = {
   desktopImage: string;
   tabletImage: string;
   mobileImage: string;
-  href?: string | null;
 };
 
 const HeroBanner = ({
   slides,
-  ariaLabel = "Featured collections",
 }: {
   slides: HeroSlide[];
-  ariaLabel?: string;
 }) => {
   console.log("Rendering HeroBanner with slides:", slides);
   const sliderRef = useRef<Slider | null>(null);
@@ -45,16 +42,10 @@ const HeroBanner = ({
   if (!slides.length) return null;
 
   return (
-    <section className="page-width hero-section" aria-label={ariaLabel}>
+    <section className="page-width hero-section">
       <div className="hero">
         <Slider ref={sliderRef} {...settings}>
           {slides.map((slide, index) => {
-            const fallbackHref = slide.slug.trim()
-              ? slide.source === "category"
-                ? `/products?category=${encodeURIComponent(slide.slug)}`
-                : `/products?offer=${encodeURIComponent(slide.slug)}`
-              : null;
-            const href = slide.href === null ? null : slide.href || fallbackHref;
             const image = (
               <picture>
                 <source
@@ -75,13 +66,9 @@ const HeroBanner = ({
 
             return (
               <article className="hero-slide hero-slide-full" key={slide.id}>
-                {href ? (
-                  <Link className="hero-full-link" href={href}>
-                    {image}
-                  </Link>
-                ) : (
-                  image
-                )}
+                <Link className="hero-full-link" href={slide.source === "category" ? `/category/${encodeURIComponent(slide.slug)}` :`products?offer=${encodeURIComponent(slide.slug)}`} passHref>
+                  {image}``
+                </Link>
               </article>
             );
           })}

@@ -226,7 +226,6 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
         source: "category",
         title: category.name,
         slug: category.slug,
-        href: null,
         desktopImage,
         tabletImage: desktopImage,
         mobileImage: desktopImage,
@@ -234,9 +233,6 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
     ];
   }, [category, currentSlug]);
   const displayedHeroSlides = currentSlug ? categoryHeroSlides : heroSlides;
-  const heroAriaLabel = currentSlug && category
-    ? `${category.name} collection banner`
-    : "Featured collections";
 
   const contextValue = useMemo<FilterContextType>(
     () => ({
@@ -254,10 +250,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
     <FilterContext.Provider value={contextValue}>
       <main className="store-page">
         {displayedHeroSlides.length > 0 ? (
-          <HeroBanner
-            slides={displayedHeroSlides}
-            ariaLabel={heroAriaLabel}
-          />
+          <HeroBanner slides={displayedHeroSlides} />
         ) : isLoading ? (
           <div className="page-width hero-section" aria-hidden="true">
             <div className="store-skeleton-block store-hero-skeleton" />
