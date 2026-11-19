@@ -19,7 +19,6 @@ const HeroBanner = ({
 }: {
   slides: HeroSlide[];
 }) => {
-  console.log("Rendering HeroBanner with slides:", slides);
   const sliderRef = useRef<Slider | null>(null);
 
   const settings: Settings = {
