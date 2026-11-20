@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { CustomerLoginModal } from "@/components/auth/CustomerLoginModal";
@@ -9,8 +9,10 @@ import { Icon } from "@/components/Icon";
 import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
 import { getData } from "@/services/api/apiService";
 import type { ApiSuccessResponse } from "@/services/api/errors";
+import { customerAuthService } from "@/services/customerAuthService";
 import type { AppDispatch, RootState } from "@/services/redux";
 import { setAuthOpen } from "@/services/redux/slices/modalSlice";
+import { clearAuthenticatedUser } from "@/services/redux/slices/userAuthSlice";
 
 function Logo() {
   return (
@@ -47,10 +49,16 @@ function categoryHref(category: HeaderCategory): string {
 export function SiteHeader() {
   const dispatch = useDispatch<AppDispatch>();
   const authOpen = useSelector((state: RootState) => state.modal.authOpen);
+  const isAuthenticated = useSelector(
+    (state: RootState) => state.userAuth.isAuthenticated,
+  );
+  const currentUser = useSelector((state: RootState) => state.userAuth.user);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState<HeaderCategory[]>([]);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountControlRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -125,6 +133,52 @@ export function SiteHeader() {
     };
   }, [menuOpen]);
 
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (
+        event.target instanceof Node &&
+        !accountControlRef.current?.contains(event.target)
+      ) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccountMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [accountMenuOpen]);
+
+  function handleAccountClick() {
+    if (isAuthenticated) {
+      setAccountMenuOpen((open) => !open);
+      return;
+    }
+
+    dispatch(setAuthOpen(true));
+  }
+
+  function handleLogout() {
+    customerAuthService.logout();
+    dispatch(clearAuthenticatedUser());
+    setAccountMenuOpen(false);
+    dispatch(setAuthOpen(false));
+  }
+
+  const accountLabel = [
+    currentUser?.firstName,
+    currentUser?.lastName,
+  ]
+    .filter(Boolean)
+    .join(" ") || currentUser?.email || currentUser?.phoneNumber || "Your account";
+
   return (
     <header className={`site-header${isScrolled ? " is-scrolled" : ""}`}>
       <div className="announcement">
@@ -160,25 +214,43 @@ export function SiteHeader() {
             <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
               <Icon name="bag" /><span className="cart-count">2</span>
             </button>
-            <button
-              className="icon-button header-wishlist-button sign-in"
-              type="button"
-              aria-label="Sign in"
-              aria-haspopup="dialog"
-              title="Sign in"
-              onClick={() => dispatch(setAuthOpen(true))}
-            >
-              <Icon name="user" />
-            </button>
-            <button
-              className="icon-button mobile-account-button"
-              type="button"
-              aria-label="Sign in"
-              aria-haspopup="dialog"
-              onClick={() => dispatch(setAuthOpen(true))}
-            >
-              <Icon name="user" />
-            </button>
+            <div className="account-control" ref={accountControlRef}>
+              <button
+                className="icon-button header-wishlist-button sign-in"
+                type="button"
+                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
+                aria-haspopup={isAuthenticated ? "menu" : "dialog"}
+                aria-expanded={isAuthenticated ? accountMenuOpen : undefined}
+                title={isAuthenticated ? "Account" : "Sign in"}
+                onClick={handleAccountClick}
+              >
+                <Icon name="user" />
+              </button>
+              <button
+                className="icon-button mobile-account-button"
+                type="button"
+                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
+                aria-haspopup={isAuthenticated ? "menu" : "dialog"}
+                aria-expanded={isAuthenticated ? accountMenuOpen : undefined}
+                onClick={handleAccountClick}
+              >
+                <Icon name="user" />
+              </button>
+              {isAuthenticated && accountMenuOpen && (
+                <div className="account-menu" role="menu" aria-label="Account options">
+                  <p className="account-menu-label">Signed in as</p>
+                  <p className="account-menu-user">{accountLabel}</p>
+                  <button
+                    className="button button-brand-outline account-menu-logout"
+                    type="button"
+                    role="menuitem"
+                    onClick={handleLogout}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               className="icon-button mobile-menu-button"
               type="button"

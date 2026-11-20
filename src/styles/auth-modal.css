@@ -122,21 +122,9 @@
   box-shadow: 0 0 0 3px var(--brand-soft);
 }
 
-.customer-auth-submit {
+.customer-auth-action {
+  width: 100%;
   min-height: 48px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: var(--radius-full);
-  background: var(--brand);
-  color: var(--brand-foreground);
-  cursor: pointer;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.customer-auth-submit:hover:not(:disabled) {
-  filter: brightness(1.08);
 }
 
 .customer-auth-form small {
@@ -144,22 +132,6 @@
   font-size: 12px;
   line-height: 1.5;
   text-align: center;
-}
-
-.customer-auth-text-button,
-.customer-auth-back {
-  border: 0;
-  background: transparent;
-  color: var(--brand);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.customer-auth-back {
-  color: var(--muted-foreground);
-  font-weight: 500;
 }
 
 .customer-auth-error,

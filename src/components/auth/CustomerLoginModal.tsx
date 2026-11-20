@@ -302,7 +302,7 @@ export function CustomerLoginModal() {
                 required
               />
             </label>
-            <button className="customer-auth-submit" type="submit" disabled={busy}>
+            <button className="button button-dark customer-auth-action" type="submit" disabled={busy}>
               {busy ? "Sending code..." : "Continue"}
             </button>
             <small>We’ll send a one-time verification code on WhatsApp.</small>
@@ -326,14 +326,14 @@ export function CustomerLoginModal() {
                 required
               />
             </label>
-            <button className="customer-auth-submit" type="submit" disabled={busy}>
+            <button className="button button-dark customer-auth-action" type="submit" disabled={busy}>
               {busy ? "Verifying..." : "Verify mobile number"}
             </button>
-            <button className="customer-auth-text-button" type="button" onClick={resendCode} disabled={busy}>
+            <button className="button button-brand-outline customer-auth-action" type="button" onClick={resendCode} disabled={busy}>
               Resend code
             </button>
             <button
-              className="customer-auth-back"
+              className="button button-brand-outline customer-auth-action"
               type="button"
               onClick={() => {
                 setError("");
@@ -381,7 +381,7 @@ export function CustomerLoginModal() {
                 required
               />
             </label>
-            <button className="customer-auth-submit" type="submit" disabled={busy}>
+            <button className="button button-dark customer-auth-action" type="submit" disabled={busy}>
               {busy ? "Saving..." : "Continue"}
             </button>
           </form>
@@ -404,14 +404,14 @@ export function CustomerLoginModal() {
                 required
               />
             </label>
-            <button className="customer-auth-submit" type="submit" disabled={busy}>
+            <button className="button button-dark customer-auth-action" type="submit" disabled={busy}>
               {busy ? "Verifying..." : "Verify email"}
             </button>
-            <button className="customer-auth-text-button" type="button" onClick={resendCode} disabled={busy}>
+            <button className="button button-brand-outline customer-auth-action" type="button" onClick={resendCode} disabled={busy}>
               Resend code
             </button>
             <button
-              className="customer-auth-back"
+              className="button button-brand-outline customer-auth-action"
               type="button"
               onClick={() => {
                 setError("");
