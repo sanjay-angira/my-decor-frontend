@@ -6,7 +6,10 @@ import {
   type StoreCategory,
   type StoreProductsQuery,
 } from "@/services/homepageService";
-import { resolveSluggedOptions } from "@/utils/storeFilterSlugs";
+import {
+  getCategorySubtreeIds,
+  resolveSluggedOptions,
+} from "@/utils/storeFilterSlugs";
 
 type StoreCatalogPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -95,17 +98,35 @@ export async function StoreCatalogPage({
     : 1;
   const requestedSort = firstValue(query.sortBy);
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
-  const selectedCategories = category
-    ? []
-    : resolveSluggedOptions(filters.categories, [
-        ...allValues(query.category),
-        ...allValues(query.categoryIds),
-      ]);
+  const categorySubtreeIds = category
+    ? getCategorySubtreeIds(filters.categories, category.id)
+    : [];
+  const categoryOptions = category
+    ? filters.categories.filter(
+        (categoryOption) =>
+          categoryOption.id !== category.id &&
+          categorySubtreeIds.includes(categoryOption.id),
+      )
+    : filters.categories;
+  const selectedCategories = resolveSluggedOptions(categoryOptions, [
+    ...allValues(query.category),
+    ...allValues(query.categoryIds),
+  ]);
   const selectedCategorySlugs = selectedCategories
     .map((item) => item.slug?.trim())
     .filter((slug): slug is string => Boolean(slug));
   const selectedCategoryIds = selectedCategories.map((item) => item.id);
-  const categoryIds = category ? [category.id] : selectedCategoryIds;
+  const categoryIds = category
+    ? selectedCategoryIds.length
+      ? [
+          ...new Set(
+            selectedCategoryIds.flatMap((id) =>
+              getCategorySubtreeIds(filters.categories, id),
+            ),
+          ),
+        ]
+      : categorySubtreeIds
+    : selectedCategoryIds;
   const selectedOffers = resolveSluggedOptions(
     filters.offers,
     allValues(query.offer),
@@ -114,8 +135,8 @@ export async function StoreCatalogPage({
     .map((item) => item.slug?.trim())
     .filter((slug): slug is string => Boolean(slug));
   const offerIds = selectedOffers.map((item) => item.id);
-  const rangeMin = Number(filters.priceRange.min) || 0;
-  const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
+  const rangeMin =  0;
+  const rangeMax = 200000;
   const requestedMinPrice = parseOptionalNumber(firstValue(query.minPrice));
   const requestedMaxPrice = parseOptionalNumber(firstValue(query.maxPrice));
   let minPrice = requestedMinPrice === undefined

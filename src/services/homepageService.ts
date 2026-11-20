@@ -60,6 +60,7 @@ export type StoreProductsPage = {
 };
 
 export type StoreFilters = {
+  selectedCategory: StoreCategory | null;
   categories: {
     id: number;
     name: string;
@@ -71,7 +72,15 @@ export type StoreFilters = {
     name: string;
     slug?: string | null;
   }[];
-  priceRange: { min: number; max: number };
+};
+
+type StoreCategoryOffer = {
+  id: number;
+  name: string;
+  slug?: string | null;
+  desktopImage: string | null;
+  tabletImage: string | null;
+  mobileImage: string | null;
 };
 
 export type StoreCategory = {
@@ -80,14 +89,7 @@ export type StoreCategory = {
   slug: string;
   description: string;
   desktopBanner: string | null;
-  categoryOffers?: {
-    id: number;
-    name: string;
-    slug?: string | null;
-    desktopImage: string | null;
-    tabletImage: string | null;
-    mobileImage: string | null;
-  }[];
+  categoryOffers?: StoreCategoryOffer[];
 };
 
 export type StoreCategoryDirectoryItem = {
@@ -97,6 +99,9 @@ export type StoreCategoryDirectoryItem = {
   image: string | null;
   productCount: number;
   parentId: number | null;
+  description: string;
+  desktopBanner: string | null;
+  categoryOffers: StoreCategoryOffer[];
 };
 
 type StoreCategoriesResponse = {
@@ -123,6 +128,15 @@ type StoreCategoriesResponse = {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ||
   "http://localhost:8080/backend/api";
+
+function cleanCategoryDescription(value?: string | null): string {
+  const description = (value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return description.toLowerCase().startsWith("no descr") ? "" : description;
+}
 
 function mapStoreProduct(product: StoreProductCardResponse): ProductCardData | null {
   const slug = product.productSlug?.trim();
@@ -200,7 +214,24 @@ export async function fetchStoreFilterOptions(
     fetchStoreCategories(),
     fetchStoreOffers(categorySlug),
   ]);
+  const selectedCategory = allCategories.find(
+    (category) =>
+      categorySlug &&
+      category.slug?.trim().toLowerCase() === categorySlug.trim().toLowerCase(),
+  );
+
   return {
+    selectedCategory:
+      selectedCategory?.slug
+        ? {
+            id: selectedCategory.id,
+            name: selectedCategory.name,
+            slug: selectedCategory.slug,
+            description: selectedCategory.description,
+            desktopBanner: selectedCategory.desktopBanner,
+            categoryOffers: selectedCategory.categoryOffers,
+          }
+        : null,
     categories: allCategories.map(({ id, name, slug, parentId }) => ({
       id,
       name,
@@ -208,7 +239,6 @@ export async function fetchStoreFilterOptions(
       parentId,
     })),
     offers,
-    priceRange: { min: 0, max: 200000 },
   };
 }
 
@@ -264,17 +294,12 @@ export async function fetchStoreCategoryBySlug(
     (item) => item.slug?.trim().toLowerCase() === slug.trim().toLowerCase(),
   );
   if (!category || !category.slug) return null;
-  const description = (category.description || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 
   return {
     id: category.id,
     name: category.name,
     slug: category.slug,
-    description: description.toLowerCase().startsWith("no descr") ? "" : description,
+    description: cleanCategoryDescription(category.description),
     desktopBanner: category.desktopBanner || null,
     categoryOffers: Array.isArray(category.categoryOffers)
       ? category.categoryOffers.map((offer) => ({
@@ -290,10 +315,7 @@ export async function fetchStoreCategoryBySlug(
 export async function fetchStoreCategories(): Promise<
   StoreCategoryDirectoryItem[]
 > {
-  const response = await fetch(
-    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.CATEGORIES}`,
-    { cache: "no-store" },
-  );
+  const response = await fetch(`${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.CATEGORIES}`,{ cache: "no-store" },);
   if (!response.ok) {
     throw new Error(
       `Store categories request failed with status ${response.status}.`,
@@ -329,6 +351,16 @@ export async function fetchStoreCategories(): Promise<
         category.parentId !== undefined && category.parentId !== null
           ? Number(category.parentId)
           : null,
+      description: cleanCategoryDescription(category.description),
+      desktopBanner: category.desktopBanner || null,
+      categoryOffers: Array.isArray(category.categoryOffers)
+        ? category.categoryOffers.map((offer) => ({
+            ...offer,
+            desktopImage: offer.desktopImage ?? null,
+            tabletImage: offer.tabletImage ?? null,
+            mobileImage: offer.mobileImage ?? null,
+          }))
+        : [],
     };
   });
 }

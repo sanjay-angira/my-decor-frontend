@@ -19,9 +19,6 @@ import {
   FilterContext,
   type FilterContextType,
 } from "@/components/store/storeFilterContext";
-import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
-import { getData } from "@/services/api/apiService";
-import type { ApiSuccessResponse } from "@/services/api/errors";
 import {
   fetchHomepageBanners,
   fetchStoreFilterOptions,
@@ -31,33 +28,6 @@ import {
 } from "@/services/homepageService";
 
 export { useFilterContext } from "@/components/store/storeFilterContext";
-
-type StoreCategoriesResponse = {
-  rows?: Array<{
-    id: number;
-    name: string;
-    slug?: string | null;
-    description?: string | null;
-    desktopBanner?: string | null;
-    categoryOffers?: Array<{
-      id: number;
-      name: string;
-      slug?: string | null;
-      desktopImage?: string | null;
-      tabletImage?: string | null;
-      mobileImage?: string | null;
-    }>;
-  }>;
-};
-
-function cleanDescription(value?: string | null): string {
-  const description = (value || "")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return description.toLowerCase().startsWith("no descr") ? "" : description;
-}
 
 function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -84,72 +54,41 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
+    const getBannerData = async () => {
+      try {
+        const banners = await fetchHomepageBanners();
+        if (!cancelled) {
+          setHeroSlides(
+            currentSlug
+              ? banners.filter(
+                (banner) =>
+                  banner.source === "category" &&
+                  banner.slug.trim().toLowerCase() ===
+                  currentSlug.trim().toLowerCase(),
+              )
+              : banners,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to load store/category banners.", error);
+        if (!cancelled) setHeroSlides([]);
+      }
+    }
+
     const loadSharedData = async () => {
       setIsLoading(true);
       try {
-        try {
-          const banners = await fetchHomepageBanners();
-          if (!cancelled) {
-            setHeroSlides(
-              currentSlug
-                ? banners.filter(
-                    (banner) =>
-                      banner.source === "category" &&
-                      banner.slug.trim().toLowerCase() ===
-                        currentSlug.trim().toLowerCase(),
-                  )
-                : banners,
-            );
-          }
-        } catch (error) {
-          console.error("Failed to load store/category banners.", error);
-          if (!cancelled) setHeroSlides([]);
-        }
-
-        const filterOptions = await fetchStoreFilterOptions(
-          currentSlug || undefined,
-        );
-        if (!cancelled) setFilters(filterOptions);
-
-        if (!currentSlug) {
-          if (!cancelled) setCategory(null);
-          return;
-        }
-
-        const categoriesResponse = await getData<ApiSuccessResponse<StoreCategoriesResponse>>(API_ENDPOINTS.CUSTOMER.CATEGORIES, undefined, { auth: false });
-
-        if (!cancelled && categoriesResponse.success) {
-          const match = categoriesResponse.data?.rows?.find(
-            (item) =>
-              item.slug?.trim().toLowerCase() ===
-              currentSlug.trim().toLowerCase(),
-          );
-          if (match?.slug) {
-            setCategory({
-              id: match.id,
-              name: match.name,
-              slug: match.slug,
-              description: cleanDescription(match.description),
-              desktopBanner: match.desktopBanner || null,
-              categoryOffers: Array.isArray(match.categoryOffers)
-                ? match.categoryOffers.map((offer) => ({
-                    ...offer,
-                    desktopImage: offer.desktopImage ?? null,
-                    tabletImage: offer.tabletImage ?? null,
-                    mobileImage: offer.mobileImage ?? null,
-                  }))
-                : [],
-            });
-          } else {
-            setCategory(null);
-          }
+        const filterOptions = await fetchStoreFilterOptions(currentSlug || undefined);
+        console.log("Fetched filter options:", filterOptions);
+        if (!cancelled) {
+          setFilters(filterOptions);
+          setCategory(filterOptions.selectedCategory);
         }
       } catch (error) {
         console.error("Failed to load store/category layout data.", error);
         if (!cancelled) {
           setFilters(null);
           setCategory(null);
-          setHeroSlides([]);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -157,6 +96,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
     };
 
     void loadSharedData();
+    void getBannerData()
     return () => {
       cancelled = true;
     };

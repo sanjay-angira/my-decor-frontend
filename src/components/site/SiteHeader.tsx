@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { CustomerLoginModal } from "@/components/auth/CustomerLoginModal";
 import { Icon } from "@/components/Icon";
 import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
 import { getData } from "@/services/api/apiService";
 import type { ApiSuccessResponse } from "@/services/api/errors";
+import type { AppDispatch, RootState } from "@/services/redux";
+import { setAuthOpen } from "@/services/redux/slices/modalSlice";
 
 function Logo() {
   return (
@@ -41,6 +45,8 @@ function categoryHref(category: HeaderCategory): string {
 }
 
 export function SiteHeader() {
+  const dispatch = useDispatch<AppDispatch>();
+  const authOpen = useSelector((state: RootState) => state.modal.authOpen);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -154,10 +160,23 @@ export function SiteHeader() {
             <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
               <Icon name="bag" /><span className="cart-count">2</span>
             </button>
-            <button className="icon-button header-wishlist-button sign-in" type="button" aria-label="Sign in" title="Sign in">
+            <button
+              className="icon-button header-wishlist-button sign-in"
+              type="button"
+              aria-label="Sign in"
+              aria-haspopup="dialog"
+              title="Sign in"
+              onClick={() => dispatch(setAuthOpen(true))}
+            >
               <Icon name="user" />
             </button>
-            <button className="icon-button mobile-account-button" type="button" aria-label="Sign in">
+            <button
+              className="icon-button mobile-account-button"
+              type="button"
+              aria-label="Sign in"
+              aria-haspopup="dialog"
+              onClick={() => dispatch(setAuthOpen(true))}
+            >
               <Icon name="user" />
             </button>
             <button
@@ -242,6 +261,7 @@ export function SiteHeader() {
           document.body,
         )}
       </div>
+      {authOpen && <CustomerLoginModal />}
     </header>
   );
 }

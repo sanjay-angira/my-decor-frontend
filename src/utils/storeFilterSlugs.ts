@@ -3,6 +3,30 @@ type SluggedOption = {
   slug?: string | null;
 };
 
+export function getCategorySubtreeIds(
+  categories: readonly { id: number; parentId: number | null }[],
+  rootCategoryId: number,
+): number[] {
+  const categoryIds = new Set([rootCategoryId]);
+  let hasNewDescendants = true;
+
+  while (hasNewDescendants) {
+    hasNewDescendants = false;
+    for (const category of categories) {
+      if (
+        category.parentId !== null &&
+        categoryIds.has(category.parentId) &&
+        !categoryIds.has(category.id)
+      ) {
+        categoryIds.add(category.id);
+        hasNewDescendants = true;
+      }
+    }
+  }
+
+  return [...categoryIds];
+}
+
 export function resolveSluggedOptions<T extends SluggedOption>(
   options: readonly T[] | undefined,
   values: readonly string[],

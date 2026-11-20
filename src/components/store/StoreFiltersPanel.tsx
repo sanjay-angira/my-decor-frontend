@@ -5,7 +5,10 @@ import { AutoSubmitFilterForm } from "@/components/AutoSubmitFilterForm";
 import { PriceRangeFilter } from "@/components/PriceRangeFilter";
 import { useFilterContext } from "@/components/store/storeFilterContext";
 import type { StoreProductsQuery } from "@/services/homepageService";
-import { resolveSluggedOptions } from "@/utils/storeFilterSlugs";
+import {
+  getCategorySubtreeIds,
+  resolveSluggedOptions,
+} from "@/utils/storeFilterSlugs";
 
 const sortOptions: NonNullable<StoreProductsQuery["sortBy"]>[] = [
   "newest",
@@ -70,19 +73,27 @@ export function StoreFiltersPanel() {
   const offerValues = selectedOffers
     .map((offer) => offer.slug?.trim())
     .filter((slug): slug is string => Boolean(slug));
-  const selectedCategories = category
-    ? []
-    : resolveSluggedOptions(filters.categories, [
-        ...searchParams.getAll("category"),
-        ...searchParams.getAll("categoryIds"),
-      ]);
+  const categorySubtreeIds = category
+    ? new Set(getCategorySubtreeIds(filters.categories, category.id))
+    : null;
+  const categoryOptions = category
+    ? filters.categories.filter(
+        (categoryOption) =>
+          categoryOption.id !== category.id &&
+          categorySubtreeIds?.has(categoryOption.id),
+      )
+    : filters.categories;
+  const selectedCategories = resolveSluggedOptions(categoryOptions, [
+    ...searchParams.getAll("category"),
+    ...searchParams.getAll("categoryIds"),
+  ]);
   const selectedCategorySlugs = selectedCategories
     .map((item) => item.slug?.trim().toLowerCase())
     .filter((slug): slug is string => Boolean(slug));
   const requestedSort = firstValue(searchParams.get("sortBy"));
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
-  const rangeMin = Number(filters.priceRange.min) || 0;
-  const rangeMax = Math.max(rangeMin, Number(filters.priceRange.max) || rangeMin);
+  const rangeMin =  0;
+  const rangeMax = 200000;
   const requestedMinPrice = parseOptionalNumber(
     firstValue(searchParams.get("minPrice")) || undefined,
   );
@@ -192,10 +203,10 @@ export function StoreFiltersPanel() {
         </label>
       </fieldset>
 
-      {!category && (
+      {categoryOptions.length > 0 && (
         <fieldset className="store-filter-group store-category-filter">
-          <legend>Product Categories</legend>
-          {filters.categories.map((categoryOption) => {
+          <legend>{category ? "Subcategories" : "Product Categories"}</legend>
+          {categoryOptions.map((categoryOption) => {
             const slug = categoryOption.slug?.trim();
             if (!slug) return null;
 
