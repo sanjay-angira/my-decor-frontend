@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useParams, usePathname } from "next/navigation";
-import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
+import HeroBanner from "@/components/homepage/HeroBanner";
 import {
   StoreFiltersPanel,
   StoreFiltersSkeleton,
@@ -22,7 +22,13 @@ import {
 import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
 import { getData } from "@/services/api/apiService";
 import type { ApiSuccessResponse } from "@/services/api/errors";
-import type { StoreCategory, StoreFilters } from "@/services/homepageService";
+import {
+  fetchHomepageBanners,
+  fetchStoreFilterOptions,
+  type HomepageBanner,
+  type StoreCategory,
+  type StoreFilters,
+} from "@/services/homepageService";
 
 export { useFilterContext } from "@/components/store/storeFilterContext";
 
@@ -67,6 +73,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
 
   const [filters, setFilters] = useState<StoreFilters | null>(null);
   const [category, setCategory] = useState<StoreCategory | null>(null);
+  const [heroSlides, setHeroSlides] = useState<HomepageBanner[]>([]);
   const [toggleFilters, setToggleFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -80,21 +87,29 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
     const loadSharedData = async () => {
       setIsLoading(true);
       try {
-        const filtersResponse = await getData<ApiSuccessResponse<StoreFilters>>(
-          API_ENDPOINTS.CUSTOMER.STORE_FILTERS,
-          undefined,
-          { auth: false },
-        );
-
-        if (
-          !cancelled &&
-          filtersResponse.success &&
-          Array.isArray(filtersResponse.data?.categories) &&
-          filtersResponse.data.priceRange &&
-          Array.isArray(filtersResponse.data.banners)
-        ) {
-          setFilters(filtersResponse.data);
+        try {
+          const banners = await fetchHomepageBanners();
+          if (!cancelled) {
+            setHeroSlides(
+              currentSlug
+                ? banners.filter(
+                    (banner) =>
+                      banner.source === "category" &&
+                      banner.slug.trim().toLowerCase() ===
+                        currentSlug.trim().toLowerCase(),
+                  )
+                : banners,
+            );
+          }
+        } catch (error) {
+          console.error("Failed to load store/category banners.", error);
+          if (!cancelled) setHeroSlides([]);
         }
+
+        const filterOptions = await fetchStoreFilterOptions(
+          currentSlug || undefined,
+        );
+        if (!cancelled) setFilters(filterOptions);
 
         if (!currentSlug) {
           if (!cancelled) setCategory(null);
@@ -134,6 +149,7 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setFilters(null);
           setCategory(null);
+          setHeroSlides([]);
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -145,94 +161,6 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [currentSlug]);
-
-  const heroSlides = useMemo<HeroSlide[]>(() => {
-    if (!filters?.banners?.length || currentSlug) return [];
-    return filters.banners.flatMap((banner, index) => {
-      const desktopImage =
-        banner.desktopImage ||
-        banner.tabletImage ||
-        banner.mobileImage ||
-        "";
-      if (!desktopImage) return [];
-      if (banner.source === "offer") {
-        const offerId = /^offer-(\d+)$/.exec(banner.id)?.[1];
-        const offer = offerId
-          ? filters.offers?.find((item) => item.id === Number(offerId))
-          : undefined;
-        const offerSlug = offer?.slug?.trim();
-        return [
-          {
-            id: index + 1,
-            source: "offer",
-            title: banner.title,
-            slug: offerSlug || "",
-            desktopImage,
-            tabletImage: banner.tabletImage || desktopImage,
-            mobileImage: banner.mobileImage || banner.tabletImage || desktopImage,
-          },
-        ];
-      }
-      const categoryId = /^category-(\d+)$/.exec(banner.id)?.[1];
-      const bannerCategory = categoryId
-        ? filters.categories.find((item) => item.id === Number(categoryId))
-        : undefined;
-      return [
-        {
-          id: index + 1,
-          source: "category",
-          title: banner.title,
-          slug: bannerCategory?.slug || "",
-          desktopImage,
-          tabletImage: banner.tabletImage || desktopImage,
-          mobileImage: banner.mobileImage || banner.tabletImage || desktopImage,
-        },
-      ];
-    });
-  }, [currentSlug, filters]);
-
-  const categoryHeroSlides = useMemo<HeroSlide[]>(() => {
-    if (!currentSlug || !category) return [];
-
-    const offerSlides = (category.categoryOffers ?? []).flatMap(
-      (offer, index) => {
-        const desktopImage =
-          offer.desktopImage ||
-          offer.tabletImage ||
-          offer.mobileImage ||
-          "";
-        if (!desktopImage || !offer.slug?.trim()) return [];
-        return [
-          {
-            id: index + 1,
-            source: "offer",
-            title: offer.name,
-            slug: offer.slug.trim(),
-            desktopImage,
-            tabletImage: offer.tabletImage || desktopImage,
-            mobileImage:
-              offer.mobileImage || offer.tabletImage || desktopImage,
-          },
-        ];
-      },
-    );
-    if (offerSlides.length) return offerSlides;
-
-    const desktopImage = category.desktopBanner?.trim();
-    if (!desktopImage) return [];
-    return [
-      {
-        id: category.id,
-        source: "category",
-        title: category.name,
-        slug: category.slug,
-        desktopImage,
-        tabletImage: desktopImage,
-        mobileImage: desktopImage,
-      },
-    ];
-  }, [category, currentSlug]);
-  const displayedHeroSlides = currentSlug ? categoryHeroSlides : heroSlides;
 
   const contextValue = useMemo<FilterContextType>(
     () => ({
@@ -249,8 +177,8 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
   return (
     <FilterContext.Provider value={contextValue}>
       <main className="store-page">
-        {displayedHeroSlides.length > 0 ? (
-          <HeroBanner slides={displayedHeroSlides} />
+        {heroSlides.length > 0 ? (
+          <HeroBanner slides={heroSlides} />
         ) : isLoading ? (
           <div className="page-width hero-section" aria-hidden="true">
             <div className="store-skeleton-block store-hero-skeleton" />

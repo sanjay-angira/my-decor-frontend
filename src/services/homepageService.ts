@@ -72,16 +72,6 @@ export type StoreFilters = {
     slug?: string | null;
   }[];
   priceRange: { min: number; max: number };
-  banners: {
-    id: string;
-    source?: "offer" | "category";
-    title: string;
-    image: string | null;
-    desktopImage: string | null;
-    tabletImage: string | null;
-    mobileImage: string | null;
-    link: string;
-  }[];
 };
 
 export type StoreCategory = {
@@ -203,26 +193,55 @@ export async function fetchStoreProducts(
   };
 }
 
-export async function fetchStoreFilters(): Promise<StoreFilters> {
+export async function fetchStoreFilterOptions(
+  categorySlug?: string,
+): Promise<StoreFilters> {
+  const [allCategories, offers] = await Promise.all([
+    fetchStoreCategories(),
+    fetchStoreOffers(categorySlug),
+  ]);
+  return {
+    categories: allCategories.map(({ id, name, slug, parentId }) => ({
+      id,
+      name,
+      slug,
+      parentId,
+    })),
+    offers,
+    priceRange: { min: 0, max: 200000 },
+  };
+}
+
+async function fetchStoreOffers(
+  categorySlug?: string,
+): Promise<NonNullable<StoreFilters["offers"]>> {
+  const query = new URLSearchParams();
+  if (categorySlug) query.set("categorySlug", categorySlug);
+  const queryString = query.toString();
   const response = await fetch(
-    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.STORE_FILTERS}`,
+    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.OFFERS}${
+      queryString ? `?${queryString}` : ""
+    }`,
     { cache: "no-store" },
   );
   if (!response.ok) {
-    throw new Error(`Store filters request failed with status ${response.status}.`);
+    throw new Error(`Store offers request failed with status ${response.status}.`);
   }
 
-  const payload = (await response.json()) as ApiSuccessResponse<StoreFilters>;
-  if (
-    !payload.success ||
-    !Array.isArray(payload.data?.categories) ||
-    !payload.data.priceRange ||
-    !Array.isArray(payload.data.banners)
-  ) {
-    throw new Error("Store filters response was invalid.");
+  const payload = (await response.json()) as ApiSuccessResponse<
+    { id: number; name: string; slug: string | null }[]
+  >;
+  if (!payload.success || !Array.isArray(payload.data)) {
+    throw new Error("Store offers response was invalid.");
   }
 
-  return payload.data;
+  return payload.data.flatMap((offer) => {
+    const id = Number(offer.id);
+    const name = offer.name?.trim();
+    const slug = offer.slug?.trim();
+    if (!Number.isInteger(id) || id <= 0 || !name || !slug) return [];
+    return [{ id, name, slug }];
+  });
 }
 
 export async function fetchStoreCategoryBySlug(
@@ -287,21 +306,24 @@ export async function fetchStoreCategories(): Promise<
   }
 
   return payload.data.rows.map((category) => {
+    const categoryId = Number(category.id);
     if (
-      !Number.isInteger(category.id) ||
-      category.id <= 0 ||
+      !Number.isInteger(categoryId) ||
+      categoryId <= 0 ||
       !category.name?.trim()
     ) {
       throw new Error("Store categories response contained an invalid category.");
     }
 
+    const productCount = Number(category.productCount);
+
     return {
-      id: category.id,
+      id: categoryId,
       name: category.name.trim(),
       slug: category.slug?.trim() || null,
       image: category.image || category.desktopBanner || null,
-      productCount: Number.isFinite(category.productCount)
-        ? Math.max(0, Number(category.productCount))
+      productCount: Number.isFinite(productCount)
+        ? Math.max(0, productCount)
         : 0,
       parentId:
         category.parentId !== undefined && category.parentId !== null

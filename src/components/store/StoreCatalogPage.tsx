@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/ProductCard";
 import {
-  fetchStoreFilters,
+  fetchStoreFilterOptions,
   fetchStoreProducts,
   type StoreCategory,
   type StoreProductsQuery,
@@ -87,7 +87,7 @@ export async function StoreCatalogPage({
     ? `/category/${encodeURIComponent(category.slug)}`
     : "/products";
   const query = await searchParams;
-  const filters = await fetchStoreFilters();
+  const filters = await fetchStoreFilterOptions(category?.slug);
   const search = firstValue(query.search).trim();
   const requestedPage = Number.parseInt(firstValue(query.page), 10);
   const pageNumber = Number.isFinite(requestedPage) && requestedPage > 0
