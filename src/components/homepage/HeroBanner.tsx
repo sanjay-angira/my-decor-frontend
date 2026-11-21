@@ -24,7 +24,7 @@ const HeroBanner = ({
   const settings: Settings = {
     accessibility: true,
     arrows: false,
-    autoplay:false,
+    autoplay: slides.length > 1,
     autoplaySpeed: 7000,
     dots: slides.length > 1,
     infinite: slides.length > 1,
