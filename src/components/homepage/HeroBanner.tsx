@@ -24,7 +24,7 @@ const HeroBanner = ({
   const settings: Settings = {
     accessibility: true,
     arrows: false,
-    autoplay: slides.length > 1,
+    autoplay:false,
     autoplaySpeed: 7000,
     dots: slides.length > 1,
     infinite: slides.length > 1,
@@ -66,7 +66,7 @@ const HeroBanner = ({
             return (
               <article className="hero-slide hero-slide-full" key={slide.id}>
                 <Link className="hero-full-link" href={slide.source === "category" ? `/category/${encodeURIComponent(slide.slug)}` :`products?offer=${encodeURIComponent(slide.slug)}`} passHref>
-                  {image}``
+                  {image}
                 </Link>
               </article>
             );
