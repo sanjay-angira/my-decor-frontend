@@ -7,7 +7,12 @@ export type CartItem = {
   variationId: number;
   quantity: number;
   priceAtTime: number;
+  sellingPrice?: number | null;
   finalPrice?: number;
+  totalDiscount?: number;
+  appliedOffer?: {
+    offerName?: string | null;
+  } | null;
   subtotal?: number;
   productName: string;
   image?: string | null;

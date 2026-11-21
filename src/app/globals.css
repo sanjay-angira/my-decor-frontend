@@ -134,6 +134,18 @@ a {
   text-decoration: none;
 }
 
+a.account-sidebar-link {
+  color: var(--foreground);
+}
+
+a.account-sidebar-link:hover:not([aria-current="page"]) {
+  color: var(--brand);
+}
+
+a.account-sidebar-link[aria-current="page"] {
+  color: var(--brand-foreground);
+}
+
 img {
   display: block;
 }

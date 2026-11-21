@@ -6,7 +6,6 @@ import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { CustomerLoginModal } from "@/components/auth/CustomerLoginModal";
 import { CartDrawer } from "@/components/commerce/CartDrawer";
-import { WishlistDrawer } from "@/components/commerce/WishlistDrawer";
 import { Icon } from "@/components/Icon";
 import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
 import { getData } from "@/services/api/apiService";
@@ -18,7 +17,6 @@ import type { AppDispatch, RootState } from "@/services/redux";
 import {
   setAuthOpen,
   setCartOpen,
-  setWishlistOpen,
 } from "@/services/redux/slices/modalSlice";
 import {
   setCartContents,
@@ -77,9 +75,6 @@ export function SiteHeader() {
   );
   const currentUser = useSelector((state: RootState) => state.userAuth.user);
   const cartCount = useSelector((state: RootState) => state.cart.count);
-  const wishlistIds = useSelector(
-    (state: RootState) => state.wishlist.productIds,
-  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -181,7 +176,6 @@ export function SiteHeader() {
         });
     } else {
       dispatch(clearWishlist());
-      dispatch(setWishlistOpen(false));
     }
 
     return () => {
@@ -261,7 +255,6 @@ export function SiteHeader() {
     customerAuthService.logout();
     dispatch(clearAuthenticatedUser());
     dispatch(clearWishlist());
-    dispatch(setWishlistOpen(false));
     setAccountMenuOpen(false);
     dispatch(setAuthOpen(false));
   }
@@ -294,7 +287,6 @@ export function SiteHeader() {
             <input type="search" placeholder={'Search "Modern Wall Art"'} aria-label="Search products" />
           </label>
           <div className="header-actions">
-            <Link className="header-action-label" href="/#featured"><Icon name="sparkles" /> Offers</Link>
             <button
               className="icon-button mobile-search-button"
               type="button"
@@ -303,27 +295,6 @@ export function SiteHeader() {
               onClick={() => setSearchOpen((open) => !open)}
             >
               <Icon name={searchOpen ? "close" : "search"} />
-            </button>
-            <button
-              className="icon-button header-wishlist-button"
-              type="button"
-              aria-label={
-                !isAuthInitialized
-                  ? "Loading account"
-                  : isAuthenticated
-                    ? `Wishlist, ${wishlistIds.length} items`
-                    : "Sign in to view wishlist"
-              }
-              disabled={!isAuthInitialized}
-              onClick={() => {
-                if (isAuthenticated) dispatch(setWishlistOpen(true));
-                else dispatch(setAuthOpen(true));
-              }}
-            >
-              <Icon name="heart" />
-              {isAuthenticated && wishlistIds.length > 0 && (
-                <span className="cart-count">{wishlistIds.length > 99 ? "99+" : wishlistIds.length}</span>
-              )}
             </button>
             <button
               className="icon-button cart-button"
@@ -450,7 +421,6 @@ export function SiteHeader() {
               </div>
               <div className="mobile-menu-content">
                 <nav className="mobile-quick-links" aria-label="Quick links">
-                  <Link href="/#featured" onClick={() => setMenuOpen(false)}><Icon name="sparkles" /> Offers</Link>
                   <Link href="/products" onClick={() => setMenuOpen(false)}><Icon name="tag" /> All Products</Link>
                   <Link href="/" onClick={() => setMenuOpen(false)}><Icon name="home" /> Store</Link>
                 </nav>
@@ -479,7 +449,6 @@ export function SiteHeader() {
       </div>
       {authOpen && <CustomerLoginModal />}
       <CartDrawer />
-      <WishlistDrawer />
     </header>
   );
 }

@@ -148,6 +148,10 @@ export function CartDrawer() {
             <ul className="flex-1 divide-y divide-border overflow-y-auto px-5">
               {items.map((item) => {
                 const stock = item.variant?.stock ?? 10;
+                const unitPrice = Number(item.finalPrice ?? item.priceAtTime);
+                const sellingPrice = Number(item.sellingPrice);
+                const hasOfferPrice =
+                  Number.isFinite(sellingPrice) && sellingPrice > unitPrice;
                 return (
                   <li key={item.id} className="flex gap-3 py-4">
                     {item.image ? (
@@ -167,9 +171,30 @@ export function CartDrawer() {
                       {item.variantName && (
                         <p className="mt-1 text-xs text-muted-foreground">{item.variantName}</p>
                       )}
-                      <p className="mt-1 text-sm font-bold text-foreground">
-                        {formatPrice(item.finalPrice ?? item.priceAtTime)}
-                      </p>
+                      <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <p className="text-sm font-bold text-foreground">
+                          {formatPrice(unitPrice)}
+                          <span className="ml-1 text-xs font-normal text-muted-foreground">
+                            each
+                          </span>
+                        </p>
+                        {hasOfferPrice && (
+                          <>
+                            <del className="text-xs text-muted-foreground">
+                              {formatPrice(sellingPrice)}
+                            </del>
+                            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
+                              {item.appliedOffer?.offerName || "Offer applied"}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {hasOfferPrice && (
+                        <p className="mt-1 text-xs font-medium text-brand">
+                          You save {formatPrice((sellingPrice - unitPrice) * item.quantity)}
+                          {item.quantity > 1 ? ` on ${item.quantity} items` : ""}
+                        </p>
+                      )}
                       <div className="mt-2 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <button

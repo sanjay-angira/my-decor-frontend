@@ -9,6 +9,7 @@ import { setAuthOpen } from "@/services/redux/slices/modalSlice";
 
 const accountSections = [
   { href: "/my-account/profile", label: "Profile settings" },
+  { href: "/my-account/address", label: "Addresses" },
   { href: "/my-account/wishlist", label: "Wishlist" },
   { href: "/my-account/orders", label: "Orders" },
 ];
@@ -43,7 +44,7 @@ export function MyAccountLayout({ children }: { children: ReactNode }) {
         <section className="rounded-xl border border-border bg-card p-6 sm:p-8">
           <h2 className="text-lg font-bold text-foreground">Sign in to your account</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to manage your profile settings and saved wishlist.
+            Sign in to manage your profile, addresses, and saved wishlist.
           </p>
           <button
             type="button"
@@ -67,7 +68,7 @@ export function MyAccountLayout({ children }: { children: ReactNode }) {
                     key={href}
                     href={href}
                     aria-current={active ? "page" : undefined}
-                    className={`shrink-0 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+                    className={`account-sidebar-link shrink-0 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
                       active
                         ? "bg-brand text-brand-foreground"
                         : "text-foreground hover:bg-secondary"
