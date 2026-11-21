@@ -20,6 +20,15 @@ export type HomepageRoom = {
   mobileImage: string | null;
 };
 
+export type HomepageFeaturedCategory = {
+  id: number;
+  title: string;
+  slug: string;
+  blurb: string;
+  image: string | null;
+  mobileImage: string | null;
+};
+
 type StoreProductCardResponse = {
   id: number;
   productId: number;
@@ -417,6 +426,30 @@ export async function fetchHomepageRooms(): Promise<HomepageRoom[]> {
   }
 
   return payload.data;
+}
+
+export async function fetchFeaturedCategories(): Promise<
+  HomepageFeaturedCategory[]
+> {
+  const response = await fetch(
+    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.FEATURED_CATEGORIES}`,
+    { cache: "no-store" },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Featured categories request failed with status ${response.status}.`,
+    );
+  }
+
+  const payload = (await response.json()) as ApiSuccessResponse<
+    HomepageFeaturedCategory[]
+  >;
+  if (!payload.success || !Array.isArray(payload.data)) {
+    throw new Error("Featured categories response was invalid.");
+  }
+
+  return payload.data.filter((category) => category.image && category.slug);
 }
 
 export async function fetchHomepageProducts(

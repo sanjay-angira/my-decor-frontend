@@ -10,6 +10,7 @@ export const API_ENDPOINTS = {
   CUSTOMER: {
     BANNERS: "customer/banners",
     ROOMS: "customer/rooms",
+    FEATURED_CATEGORIES: "customer/featured-categories",
     CATEGORIES: "customer/categories",
     OFFERS: "customer/offers",
     PRODUCTS: "customer/all-products",

@@ -34,9 +34,10 @@ export function useProductCommerce(
   const isAuthenticated = useSelector(
     (state: RootState) => state.userAuth.isAuthenticated,
   );
-  const currentUserId = useSelector((state: RootState) =>
-    Number(state.userAuth.user?.id),
-  );
+  const currentUserId = useSelector((state: RootState) => {
+    const id = state.userAuth.user?.id;
+    return id ? Number(id) : 0;
+  });
   const wishlistIds = useSelector(
     (state: RootState) => state.wishlist.productIds,
   );

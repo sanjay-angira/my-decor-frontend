@@ -79,7 +79,6 @@ function StoreAndCategoryFlowWrapper({ children }: { children: ReactNode }) {
       setIsLoading(true);
       try {
         const filterOptions = await fetchStoreFilterOptions(currentSlug || undefined);
-        console.log("Fetched filter options:", filterOptions);
         if (!cancelled) {
           setFilters(filterOptions);
           setCategory(filterOptions.selectedCategory);

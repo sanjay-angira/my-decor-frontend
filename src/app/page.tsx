@@ -12,6 +12,7 @@ import CategoryTiles from "@/components/homepage/CategoryTiles";
 import CategoryCircles from "@/components/homepage/CategoryCircles";
 import {
   fetchHomepageBanners,
+  fetchFeaturedCategories,
   fetchHomepageProducts,
   fetchHomepageRooms,
 } from "@/services/homepageService";
@@ -31,31 +32,9 @@ const categories = [
   ["Bike Wall Art", "art_bike"],
 ].map(([label, asset]) => ({ label, image: image(asset) }));
 
-const featured = [
-  {
-    title: "Wall Art",
-    blurb: "Elegant designs to transform your walls.",
-    image: image("art_leaves"),
-  },
-  {
-    title: "Planters",
-    blurb: "Greenery for a fresher space.",
-    image: image("hanging_planters"),
-  },
-  {
-    title: "Lamps",
-    blurb: "Light up your home with style.",
-    image: image("lamp"),
-  },
-  {
-    title: "Gym Wall Art",
-    blurb: "For a stronger, bolder you.",
-    image: image("art_gym"),
-  },
-];
-
 export default async function Home() {
-  const [heroSlides, bestSellers, newArrivals, rooms] = await Promise.all([
+  const [heroSlides, bestSellers, newArrivals, rooms, featuredCategories] =
+    await Promise.all([
     fetchHomepageBanners().catch((error) => {
       console.error("Failed to load homepage banners on the server.", error);
       return [] as HeroSlide[];
@@ -72,6 +51,10 @@ export default async function Home() {
       console.error("Failed to load rooms on the server.", error);
       return [];
     }),
+    fetchFeaturedCategories().catch((error) => {
+      console.error("Failed to load featured categories on the server.", error);
+      return [];
+    }),
   ]);
 
   return (
@@ -80,7 +63,12 @@ export default async function Home() {
       <CategoryCircles categories={categories} />
       <CategoryTiles />
       <TrustBadges />
-      <FeaturedCollection categories={featured} />
+      <FeaturedCollection categories={featuredCategories.map((category) => ({
+        title: category.title,
+        blurb: category.blurb,
+        image: category.mobileImage || category.image || "",
+        slug: category.slug,
+      }))} />
       <BestSellers products={bestSellers} />
       <MidBanner />
       <ShopByRoom rooms={rooms} />
