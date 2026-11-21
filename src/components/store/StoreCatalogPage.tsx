@@ -98,6 +98,12 @@ export async function StoreCatalogPage({
     : 1;
   const requestedSort = firstValue(query.sortBy);
   const sortBy = sortOptions.find((option) => option === requestedSort) ?? "newest";
+  const roomSlugs = [
+    ...allValues(query.room),
+    ...allValues(query.roomSlugs),
+  ]
+    .map((slug) => slug.trim())
+    .filter(Boolean);
   const categorySubtreeIds = category
     ? getCategorySubtreeIds(filters.categories, category.id)
     : [];
@@ -163,6 +169,7 @@ export async function StoreCatalogPage({
     search,
     sortBy,
     offerIds,
+    roomSlugs,
     categoryIds,
     minPrice,
     maxPrice,

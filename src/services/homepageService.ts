@@ -12,6 +12,14 @@ export type HomepageBanner = {
   mobileImage: string;
 };
 
+export type HomepageRoom = {
+  id: number;
+  name: string;
+  slug: string;
+  image: string | null;
+  mobileImage: string | null;
+};
+
 type StoreProductCardResponse = {
   id: number;
   productId: number;
@@ -48,6 +56,7 @@ export type StoreProductsQuery = {
   featured?: boolean;
   bestDeals?: boolean;
   categoryIds?: number[];
+  roomSlugs?: string[];
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
@@ -182,6 +191,7 @@ export async function fetchStoreProducts(
   if (params.featured) query.set("featured", "true");
   if (params.bestDeals) query.set("bestDeals", "true");
   if (params.categoryIds?.length) query.set("categoryIds", params.categoryIds.join(","));
+  if (params.roomSlugs?.length) query.set("roomSlugs", params.roomSlugs.join(","));
   if (params.minPrice !== undefined) query.set("minPrice", String(params.minPrice));
   if (params.maxPrice !== undefined) query.set("maxPrice", String(params.maxPrice));
   if (params.minRating !== undefined) query.set("minRating", String(params.minRating));
@@ -384,6 +394,26 @@ export async function fetchHomepageBanners(): Promise<HomepageBanner[]> {
   >;
   if (!payload.success || !Array.isArray(payload.data)) {
     throw new Error("Homepage banners response was invalid.");
+  }
+
+  return payload.data;
+}
+
+export async function fetchHomepageRooms(): Promise<HomepageRoom[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/${API_ENDPOINTS.CUSTOMER.ROOMS}`,
+    { cache: "no-store" },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Homepage rooms request failed with status ${response.status}.`,
+    );
+  }
+
+  const payload = (await response.json()) as ApiSuccessResponse<HomepageRoom[]>;
+  if (!payload.success || !Array.isArray(payload.data)) {
+    throw new Error("Homepage rooms response was invalid.");
   }
 
   return payload.data;

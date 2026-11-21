@@ -13,6 +13,7 @@ import CategoryCircles from "@/components/homepage/CategoryCircles";
 import {
   fetchHomepageBanners,
   fetchHomepageProducts,
+  fetchHomepageRooms,
 } from "@/services/homepageService";
 
 export const dynamic = "force-dynamic";
@@ -53,15 +54,8 @@ const featured = [
   },
 ];
 
-const rooms = [
-  { label: "Living Room", image: image("room_living") },
-  { label: "Bedroom", image: image("room_bedroom") },
-  { label: "Office", image: image("room_office") },
-  { label: "Entryway", image: image("room_entry") },
-];
-
 export default async function Home() {
-  const [heroSlides, bestSellers, newArrivals] = await Promise.all([
+  const [heroSlides, bestSellers, newArrivals, rooms] = await Promise.all([
     fetchHomepageBanners().catch((error) => {
       console.error("Failed to load homepage banners on the server.", error);
       return [] as HeroSlide[];
@@ -72,6 +66,10 @@ export default async function Home() {
     }),
     fetchHomepageProducts("newArrivals").catch((error) => {
       console.error("Failed to load new arrivals on the server.", error);
+      return [];
+    }),
+    fetchHomepageRooms().catch((error) => {
+      console.error("Failed to load rooms on the server.", error);
       return [];
     }),
   ]);
