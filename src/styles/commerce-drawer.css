@@ -1,0 +1,34 @@
+.commerce-drawer-backdrop {
+  animation: commerce-drawer-backdrop-in 180ms ease-out;
+}
+
+.commerce-drawer-panel {
+  animation: commerce-drawer-panel-in 220ms ease-out;
+}
+
+@keyframes commerce-drawer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes commerce-drawer-panel-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .commerce-drawer-backdrop,
+  .commerce-drawer-panel {
+    animation: none;
+  }
+}

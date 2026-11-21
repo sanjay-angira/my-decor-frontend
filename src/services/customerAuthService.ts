@@ -1,5 +1,7 @@
 import { API_ENDPOINTS } from "./api/API_ENDPOINT";
 import { postData } from "./api/apiService";
+import { API_BASE_URL } from "./api/config";
+import { getNewAccessToken } from "./api/jwt";
 import { tokenStorage } from "./api/storage";
 import type { StoreUser } from "./redux/slices/userAuthSlice";
 
@@ -29,6 +31,61 @@ function saveAuthTokens(response: CustomerAuthResponse) {
   }
   tokenStorage.setAccessToken(accessToken);
   if (refreshToken) tokenStorage.setRefreshToken(refreshToken);
+}
+
+type AccessTokenPayload = {
+  userRes?: {
+    id?: unknown;
+    firstName?: unknown;
+    lastName?: unknown;
+    email?: unknown;
+    phoneNumber?: unknown;
+    profileImage?: unknown;
+  };
+  exp?: unknown;
+};
+
+function decodeAccessTokenUser(token: string): StoreUser | null {
+  try {
+    const encodedPayload = token.split(".")[1];
+    if (!encodedPayload) return null;
+
+    const base64 = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
+    const paddedBase64 = base64.padEnd(
+      base64.length + ((4 - (base64.length % 4)) % 4),
+      "=",
+    );
+    const binary = atob(paddedBase64);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const payload = JSON.parse(
+      new TextDecoder().decode(bytes),
+    ) as AccessTokenPayload;
+    const id = Number(payload.userRes?.id);
+    const expiration = Number(payload.exp);
+
+    if (
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      !Number.isFinite(expiration) ||
+      expiration * 1000 <= Date.now()
+    ) {
+      return null;
+    }
+
+    const user = payload.userRes;
+    return {
+      id: String(id),
+      firstName: typeof user?.firstName === "string" ? user.firstName : undefined,
+      lastName: typeof user?.lastName === "string" ? user.lastName : undefined,
+      email: typeof user?.email === "string" ? user.email : undefined,
+      phoneNumber:
+        typeof user?.phoneNumber === "string" ? user.phoneNumber : undefined,
+      profileImage:
+        typeof user?.profileImage === "string" ? user.profileImage : null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export const customerAuthService = {
@@ -93,6 +150,31 @@ export const customerAuthService = {
       phoneNumber: user.phoneNumber,
       profileImage: user.profileImage,
     };
+  },
+
+  async restoreUser(): Promise<StoreUser | null> {
+    const accessToken = tokenStorage.getAccessToken();
+    const userFromAccessToken = accessToken
+      ? decodeAccessTokenUser(accessToken)
+      : null;
+    if (userFromAccessToken) return userFromAccessToken;
+
+    const refreshToken = tokenStorage.getRefreshToken();
+    if (!refreshToken) {
+      tokenStorage.clearTokens();
+      return null;
+    }
+
+    const refreshedAccessToken = await getNewAccessToken(
+      refreshToken,
+      API_BASE_URL,
+    );
+    const userFromRefreshedToken = decodeAccessTokenUser(refreshedAccessToken);
+    if (!userFromRefreshedToken) {
+      tokenStorage.clearTokens();
+      throw new Error("The refreshed login session was invalid.");
+    }
+    return userFromRefreshedToken;
   },
 
   logout() {

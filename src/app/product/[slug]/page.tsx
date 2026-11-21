@@ -62,6 +62,7 @@ function mapStoreProduct(value: unknown): Product | null {
     const mrp = number(variant.price);
     const price = number(pricing.finalPrice ?? variant.price);
     return {
+      variationId: number(variant.id),
       label: dimensions,
       dimensions,
       price,

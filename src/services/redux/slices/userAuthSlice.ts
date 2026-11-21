@@ -12,6 +12,7 @@ export type StoreUser = {
 type UserAuthState = {
   user: StoreUser | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
   isLoading: boolean;
   error: string | null;
 };
@@ -19,6 +20,7 @@ type UserAuthState = {
 const initialState: UserAuthState = {
   user: null,
   isAuthenticated: false,
+  isInitialized: false,
   isLoading: false,
   error: null,
 };
@@ -30,6 +32,9 @@ const userAuthSlice = createSlice({
     setAuthLoading(state, action: PayloadAction<boolean>) {
       state.isLoading = action.payload;
     },
+    setAuthInitialized(state) {
+      state.isInitialized = true;
+    },
     setAuthError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
       state.isLoading = false;
@@ -37,12 +42,14 @@ const userAuthSlice = createSlice({
     setAuthenticatedUser(state, action: PayloadAction<StoreUser>) {
       state.user = action.payload;
       state.isAuthenticated = true;
+      state.isInitialized = true;
       state.isLoading = false;
       state.error = null;
     },
     clearAuthenticatedUser(state) {
       state.user = null;
       state.isAuthenticated = false;
+      state.isInitialized = true;
       state.isLoading = false;
       state.error = null;
     },
@@ -51,6 +58,7 @@ const userAuthSlice = createSlice({
 
 export const {
   setAuthLoading,
+  setAuthInitialized,
   setAuthError,
   setAuthenticatedUser,
   clearAuthenticatedUser,

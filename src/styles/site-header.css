@@ -262,9 +262,17 @@
   white-space: nowrap;
 }
 
+.account-menu-my-account,
 .account-menu-logout {
   width: 100%;
+}
+
+.account-menu-my-account {
   margin-top: 16px;
+}
+
+.account-menu-logout {
+  margin-top: 8px;
 }
 
 .mobile-menu-button {

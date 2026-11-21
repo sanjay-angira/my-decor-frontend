@@ -15,6 +15,7 @@ export type HomepageBanner = {
 type StoreProductCardResponse = {
   id: number;
   productId: number;
+  variantId: number;
   productSlug: string | null;
   productName: string;
   image: string | null;
@@ -155,6 +156,7 @@ function mapStoreProduct(product: StoreProductCardResponse): ProductCardData | n
 
   return {
     id: product.productId || product.id,
+    variationId: product.variantId,
     slug,
     name,
     price: Number.isFinite(price) ? price : 0,

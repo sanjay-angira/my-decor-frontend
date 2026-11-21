@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { formatPrice, type ProductCardData } from "@/data/products";
+import { useProductCommerce } from "@/hooks/useProductCommerce";
 
 type ProductCardProps = {
   product: ProductCardData;
@@ -12,6 +13,13 @@ type ProductCardProps = {
 
 export function ProductCard({ product, showRating = false }: ProductCardProps) {
   const cover = product.gallery[0];
+  const {
+    addToCart,
+    toggleWishlist,
+    isWishlisted,
+    pendingAction,
+    error,
+  } = useProductCommerce(product.slug, product.variationId);
 
   return (
     <article className={`product-card${showRating ? "" : " product-card--arrival"}`}>
@@ -24,8 +32,15 @@ export function ProductCard({ product, showRating = false }: ProductCardProps) {
           )}
         </Link>
         {showRating && (
-          <button className="wishlist-button" type="button" aria-label={`Add ${product.name} to wishlist`}>
-            <Icon name="heart" />
+          <button
+            className="wishlist-button"
+            type="button"
+            aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+            aria-pressed={isWishlisted}
+            disabled={pendingAction !== null}
+            onClick={() => void toggleWishlist()}
+          >
+            <Icon name="heart" className={isWishlisted ? "fill-current text-destructive" : ""} />
           </button>
         )}
       </div>
@@ -45,11 +60,18 @@ export function ProductCard({ product, showRating = false }: ProductCardProps) {
               <Icon name="star" />
               {product.rating}
             </span>
-            <button className="add-to-cart" type="button" aria-label={`Add ${product.name} to cart`}>
+            <button
+              className="add-to-cart"
+              type="button"
+              aria-label={`Add ${product.name} to cart`}
+              disabled={pendingAction !== null}
+              onClick={() => void addToCart()}
+            >
               <Icon name="bag" />
             </button>
           </div>
         )}
+        {error && <p className="mt-2 text-xs text-destructive" role="alert">{error}</p>}
       </div>
     </article>
   );

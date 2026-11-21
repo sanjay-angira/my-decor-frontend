@@ -3,10 +3,23 @@
 import Link from "next/link";
 import { Icon } from "@/components/Icon";
 import { discountPercent, formatPrice, type Product } from "@/data/products";
+import { useProductCommerce } from "@/hooks/useProductCommerce";
 
 export function RelatedProductCard({ product }: { product: Product }) {
   const discount = discountPercent(product.price, product.mrp);
   const cover = product.gallery[0];
+  const variation = product.sizes[0];
+  const {
+    addToCart,
+    toggleWishlist,
+    isWishlisted,
+    pendingAction,
+    error,
+  } = useProductCommerce(
+    product.slug,
+    variation?.variationId ?? product.variationId,
+    variation?.variationId ? variation.label : undefined,
+  );
   if (!cover) return null;
 
   return (
@@ -53,19 +66,25 @@ export function RelatedProductCard({ product }: { product: Product }) {
             <button
               type="button"
               aria-label={`Add ${product.name} to cart`}
+              disabled={pendingAction !== null}
               className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-brand"
+              onClick={() => void addToCart()}
             >
               <Icon name="bag" className="h-4 w-4" />
             </button>
             <button
               type="button"
-              aria-label={`Add ${product.name} to wishlist`}
-              className="grid h-9 w-9 place-items-center rounded-full border border-border text-foreground/60 transition-colors hover:border-destructive hover:text-destructive"
+              aria-label={isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+              aria-pressed={isWishlisted}
+              disabled={pendingAction !== null}
+              className={`grid h-9 w-9 place-items-center rounded-full border border-border text-foreground/60 transition-colors hover:border-destructive hover:text-destructive${isWishlisted ? " border-destructive text-destructive" : ""}`}
+              onClick={() => void toggleWishlist()}
             >
-              <Icon name="heart" className="h-4 w-4" />
+              <Icon name="heart" className={`h-4 w-4${isWishlisted ? " fill-current" : ""}`} />
             </button>
           </div>
         </div>
+        {error && <p className="mt-2 text-xs text-destructive" role="alert">{error}</p>}
       </div>
     </li>
   );

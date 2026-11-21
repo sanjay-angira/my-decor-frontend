@@ -1,5 +1,24 @@
 import { API_ENDPOINTS } from "./api/API_ENDPOINT";
 import { getData, postData, type QueryParams } from "./api/apiService";
+import type { ApiSuccessResponse } from "./api/errors";
+
+export type CustomerOrder = {
+  id: number;
+  orderNumber: string;
+  orderStatus: string;
+  paymentMethod: string | null;
+  paymentStatus: string;
+  total: number;
+  createdAt: string;
+  items: {
+    id: number;
+    productName: string;
+    variantName: string | null;
+    quantity: number;
+    unitPrice: number;
+    image: string | null;
+  }[];
+};
 
 export function estimateShipping(params: QueryParams) {
   return getData(API_ENDPOINTS.CUSTOMER.SHIPPING_ESTIMATE, params);
@@ -25,5 +44,7 @@ export function fetchOrder(orderNumber: string, params?: QueryParams) {
 }
 
 export function fetchOrders() {
-  return getData(API_ENDPOINTS.CUSTOMER.ORDERS);
+  return getData<ApiSuccessResponse<CustomerOrder[]>>(
+    API_ENDPOINTS.CUSTOMER.ORDERS,
+  );
 }

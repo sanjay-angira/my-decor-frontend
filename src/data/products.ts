@@ -10,6 +10,7 @@ export interface ProductSize {
   dimensions: string;
   price: number;
   mrp: number;
+  variationId?: number;
 }
 
 
@@ -24,6 +25,7 @@ export interface ProductReview {
 
 export interface Product {
   id: number;
+  variationId?: number;
   slug: string;
   name: string;
   category: string;
@@ -42,7 +44,15 @@ export interface Product {
 
 export type ProductCardData = Pick<
   Product,
-  "id" | "slug" | "name" | "price" | "mrp" | "rating" | "reviewCount" | "gallery"
+  | "id"
+  | "variationId"
+  | "slug"
+  | "name"
+  | "price"
+  | "mrp"
+  | "rating"
+  | "reviewCount"
+  | "gallery"
 >;
 
 const mountingSpec = { label: "Mounting", value: "Ready-to-hang with pre-drilled holes and included hardware" };

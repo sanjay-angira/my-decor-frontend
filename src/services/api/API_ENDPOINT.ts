@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
       `customer/addresses/${encodeURIComponent(String(id))}/default`,
     WISHLIST: "customer/wishlist",
     WISHLIST_IDS: "customer/wishlist/ids",
+    WISHLIST_COUNT: "customer/wishlist/count",
     WISHLIST_TOGGLE: "customer/wishlist/toggle",
     WISHLIST_BY_ID: (id: number | string) =>
       `customer/wishlist/${encodeURIComponent(String(id))}`,

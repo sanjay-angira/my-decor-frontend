@@ -5,14 +5,34 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { CustomerLoginModal } from "@/components/auth/CustomerLoginModal";
+import { CartDrawer } from "@/components/commerce/CartDrawer";
+import { WishlistDrawer } from "@/components/commerce/WishlistDrawer";
 import { Icon } from "@/components/Icon";
 import { API_ENDPOINTS } from "@/services/api/API_ENDPOINT";
 import { getData } from "@/services/api/apiService";
 import type { ApiSuccessResponse } from "@/services/api/errors";
+import { fetchCart, fetchCartCount } from "@/services/cartService";
 import { customerAuthService } from "@/services/customerAuthService";
+import { fetchWishlistIds } from "@/services/wishlistService";
 import type { AppDispatch, RootState } from "@/services/redux";
-import { setAuthOpen } from "@/services/redux/slices/modalSlice";
-import { clearAuthenticatedUser } from "@/services/redux/slices/userAuthSlice";
+import {
+  setAuthOpen,
+  setCartOpen,
+  setWishlistOpen,
+} from "@/services/redux/slices/modalSlice";
+import {
+  setCartContents,
+  setCartCount,
+} from "@/services/redux/slices/cartSlice";
+import {
+  clearAuthenticatedUser,
+  setAuthInitialized,
+  setAuthenticatedUser,
+} from "@/services/redux/slices/userAuthSlice";
+import {
+  clearWishlist,
+  setWishlistProducts,
+} from "@/services/redux/slices/wishlistSlice";
 
 function Logo() {
   return (
@@ -52,7 +72,14 @@ export function SiteHeader() {
   const isAuthenticated = useSelector(
     (state: RootState) => state.userAuth.isAuthenticated,
   );
+  const isAuthInitialized = useSelector(
+    (state: RootState) => state.userAuth.isInitialized,
+  );
   const currentUser = useSelector((state: RootState) => state.userAuth.user);
+  const cartCount = useSelector((state: RootState) => state.cart.count);
+  const wishlistIds = useSelector(
+    (state: RootState) => state.wishlist.productIds,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -97,6 +124,70 @@ export function SiteHeader() {
     void loadCategories();
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    void customerAuthService
+      .restoreUser()
+      .then((user) => {
+        if (!active) return;
+        if (user) dispatch(setAuthenticatedUser(user));
+        else dispatch(setAuthInitialized());
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          console.error("Failed to restore customer session.", error);
+          dispatch(setAuthInitialized());
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isAuthInitialized) return;
+    let active = true;
+
+    const loadCartState = async () => {
+      try {
+        if (isAuthenticated) {
+          const cart = await fetchCart();
+          if (active) dispatch(setCartContents(cart));
+          return;
+        }
+
+        dispatch(setCartContents({ items: [], total: 0 }));
+        const cartCountResponse = await fetchCartCount();
+        if (active) dispatch(setCartCount(cartCountResponse.count));
+      } catch (error) {
+        if (active) console.error("Failed to load cart state.", error);
+      }
+    };
+
+    void loadCartState();
+
+    if (isAuthenticated) {
+      void fetchWishlistIds()
+        .then((response) => {
+          if (!response.success) {
+            throw new Error(response.message || "Wishlist IDs could not be loaded.");
+          }
+          if (active) dispatch(setWishlistProducts(response.data));
+        })
+        .catch((error: unknown) => {
+          if (active) console.error("Failed to load wishlist state.", error);
+        });
+    } else {
+      dispatch(clearWishlist());
+      dispatch(setWishlistOpen(false));
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [dispatch, isAuthInitialized, isAuthenticated]);
 
   useEffect(() => {
     const updateScrollState = () => {
@@ -157,6 +248,7 @@ export function SiteHeader() {
   }, [accountMenuOpen]);
 
   function handleAccountClick() {
+    if (!isAuthInitialized) return;
     if (isAuthenticated) {
       setAccountMenuOpen((open) => !open);
       return;
@@ -168,6 +260,8 @@ export function SiteHeader() {
   function handleLogout() {
     customerAuthService.logout();
     dispatch(clearAuthenticatedUser());
+    dispatch(clearWishlist());
+    dispatch(setWishlistOpen(false));
     setAccountMenuOpen(false);
     dispatch(setAuthOpen(false));
   }
@@ -210,18 +304,53 @@ export function SiteHeader() {
             >
               <Icon name={searchOpen ? "close" : "search"} />
             </button>
-            <button className="icon-button header-wishlist-button" type="button" aria-label="Wishlist"><Icon name="heart" /></button>
-            <button className="icon-button cart-button" type="button" aria-label="Cart, 2 items">
-              <Icon name="bag" /><span className="cart-count">2</span>
+            <button
+              className="icon-button header-wishlist-button"
+              type="button"
+              aria-label={
+                !isAuthInitialized
+                  ? "Loading account"
+                  : isAuthenticated
+                    ? `Wishlist, ${wishlistIds.length} items`
+                    : "Sign in to view wishlist"
+              }
+              disabled={!isAuthInitialized}
+              onClick={() => {
+                if (isAuthenticated) dispatch(setWishlistOpen(true));
+                else dispatch(setAuthOpen(true));
+              }}
+            >
+              <Icon name="heart" />
+              {isAuthenticated && wishlistIds.length > 0 && (
+                <span className="cart-count">{wishlistIds.length > 99 ? "99+" : wishlistIds.length}</span>
+              )}
+            </button>
+            <button
+              className="icon-button cart-button"
+              type="button"
+              aria-label={`Cart, ${cartCount} items`}
+              onClick={() => dispatch(setCartOpen(true))}
+            >
+              <Icon name="bag" />
+              {cartCount > 0 && (
+                <span className="cart-count">{cartCount > 99 ? "99+" : cartCount}</span>
+              )}
             </button>
             <div className="account-control" ref={accountControlRef}>
               <button
                 className="icon-button header-wishlist-button sign-in"
                 type="button"
-                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
+                aria-label={
+                  !isAuthInitialized
+                    ? "Loading account"
+                    : isAuthenticated
+                      ? "Account menu"
+                      : "Sign in"
+                }
                 aria-haspopup={isAuthenticated ? "menu" : "dialog"}
                 aria-expanded={isAuthenticated ? accountMenuOpen : undefined}
                 title={isAuthenticated ? "Account" : "Sign in"}
+                disabled={!isAuthInitialized}
                 onClick={handleAccountClick}
               >
                 <Icon name="user" />
@@ -229,9 +358,16 @@ export function SiteHeader() {
               <button
                 className="icon-button mobile-account-button"
                 type="button"
-                aria-label={isAuthenticated ? "Account menu" : "Sign in"}
+                aria-label={
+                  !isAuthInitialized
+                    ? "Loading account"
+                    : isAuthenticated
+                      ? "Account menu"
+                      : "Sign in"
+                }
                 aria-haspopup={isAuthenticated ? "menu" : "dialog"}
                 aria-expanded={isAuthenticated ? accountMenuOpen : undefined}
+                disabled={!isAuthInitialized}
                 onClick={handleAccountClick}
               >
                 <Icon name="user" />
@@ -240,6 +376,14 @@ export function SiteHeader() {
                 <div className="account-menu" role="menu" aria-label="Account options">
                   <p className="account-menu-label">Signed in as</p>
                   <p className="account-menu-user">{accountLabel}</p>
+                  <Link
+                    className="button button-brand-outline account-menu-my-account"
+                    href="/my-account"
+                    role="menuitem"
+                    onClick={() => setAccountMenuOpen(false)}
+                  >
+                    My account
+                  </Link>
                   <button
                     className="button button-brand-outline account-menu-logout"
                     type="button"
@@ -334,6 +478,8 @@ export function SiteHeader() {
         )}
       </div>
       {authOpen && <CustomerLoginModal />}
+      <CartDrawer />
+      <WishlistDrawer />
     </header>
   );
 }

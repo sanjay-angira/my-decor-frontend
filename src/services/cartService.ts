@@ -7,8 +7,17 @@ export type CartItem = {
   variationId: number;
   quantity: number;
   priceAtTime: number;
-  productName?: string;
+  finalPrice?: number;
+  subtotal?: number;
+  productName: string;
   image?: string | null;
+  variantName?: string | null;
+  variant?: {
+    stock: number;
+    product?: {
+      productSlug?: string | null;
+    } | null;
+  } | null;
 };
 
 export type CartData = {
@@ -24,6 +33,13 @@ function sessionParams() {
 export function fetchCart() {
   return getData<CartData>(
     API_ENDPOINTS.CUSTOMER.CART_ITEMS,
+    sessionParams(),
+  );
+}
+
+export function fetchCartCount() {
+  return getData<{ count: number }>(
+    API_ENDPOINTS.CUSTOMER.CART_COUNT,
     sessionParams(),
   );
 }

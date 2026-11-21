@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { discountPercent, formatPrice, type Product } from "@/data/products";
+import { useProductCommerce } from "@/hooks/useProductCommerce";
 import { cn } from "@/lib/utils";
 import { Stars } from "./Stars";
 
@@ -17,10 +18,16 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const defaultSize = Math.max(0, product.sizes.findIndex((size) => size.price === product.price));
   const [sizeIndex, setSizeIndex] = useState(defaultSize);
   const [quantity, setQuantity] = useState(1);
-  const [saved, setSaved] = useState(false);
   const [notice, setNotice] = useState("");
 
   const size = product.sizes[sizeIndex] ?? product.sizes[0];
+  const {
+    addToCart,
+    toggleWishlist,
+    isWishlisted,
+    pendingAction,
+    error,
+  } = useProductCommerce(product.slug, size?.variationId, size?.label);
   if (!size) return null;
 
   const discount = discountPercent(size.price, size.mrp);
@@ -30,6 +37,12 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
     setNotice(description ? `${message} — ${description}` : message);
     window.setTimeout(() => setNotice(""), 2800);
   };
+
+  async function handleAddToCart() {
+    if (await addToCart(quantity)) {
+      flash(`${product.name} · ${size.label} × ${quantity} added to cart`);
+    }
+  }
 
   return (
     <div>
@@ -113,17 +126,18 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
 
         <button
           type="button"
-          onClick={() => setSaved((value) => !value)}
-          aria-pressed={saved}
-          aria-label={saved ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={() => void toggleWishlist()}
+          aria-pressed={isWishlisted}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          disabled={pendingAction !== null}
           className={cn(
             "grid h-11 w-11 place-items-center rounded-full border transition-colors",
-            saved
+            isWishlisted
               ? "border-destructive bg-destructive/10 text-destructive"
               : "border-border text-foreground/60 hover:border-destructive hover:text-destructive",
           )}
         >
-          <Icon name="heart" className={cn("h-5 w-5", saved && "fill-current")} />
+          <Icon name="heart" className={cn("h-5 w-5", isWishlisted && "fill-current")} />
         </button>
       </div>
 
@@ -131,30 +145,37 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         <button
           type="button"
           className="pdp-btn-cart"
-          onClick={() => flash(`${product.name} · ${size.label} × ${quantity} added to cart`, "Free delivery on orders over ₹999.")}
+          disabled={pendingAction !== null}
+          onClick={() => void handleAddToCart()}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M16 10a4 4 0 0 1-8 0" />
             <path d="M3.103 6.034h17.794" />
             <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z" />
           </svg>
-          Add to Cart
+          {pendingAction === "cart" ? "Adding…" : "Add to Cart"}
         </button>
         <button
           type="button"
           className="pdp-btn-buy"
-          onClick={() => flash(`${product.name} · ${size.label} added to cart`, "Secure checkout opens soon.")}
+          disabled={pendingAction !== null}
+          onClick={() => void handleAddToCart()}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
           </svg>
-          Buy Now
+          {pendingAction === "cart" ? "Adding…" : "Buy Now"}
         </button>
       </div>
 
       {notice && (
         <p className="mt-3 rounded-lg bg-brand-soft px-3.5 py-2.5 text-sm font-semibold text-foreground" role="status">
           {notice}
+        </p>
+      )}
+      {error && (
+        <p className="mt-3 rounded-lg bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive" role="alert">
+          {error}
         </p>
       )}
 
