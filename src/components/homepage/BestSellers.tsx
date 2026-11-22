@@ -1,4 +1,4 @@
-import { ProductCard } from "../ProductCard";
+import { ProductCard1 } from "../ProductCard1";
 import SectionHeading from "./homePageUtilis/SectionHeading";
 import type { ProductCardData } from "@/data/products";
 
@@ -13,7 +13,7 @@ function BestSellers({products}: BestSellersProps) {
     <section className="page-width content-section" id="best-sellers">
       <SectionHeading title="Best Sellers" href="#new-arrivals" />
       <div className="product-grid best-seller-grid">
-        {products.map((product) => <ProductCard key={product.slug} product={product} showRating />)}
+        {products.map((product) => <ProductCard1 key={product.slug} product={product} />)}
       </div>
     </section>
   );

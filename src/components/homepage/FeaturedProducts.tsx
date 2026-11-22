@@ -1,4 +1,4 @@
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard2 } from "@/components/ProductCard2";
 import type { ProductCardData } from "@/data/products";
 import SectionHeading from "./homePageUtilis/SectionHeading";
 
@@ -14,7 +14,7 @@ const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
       <SectionHeading title="Featured Products" href="/products?featured=true" />
       <div className="product-grid arrivals-grid">
         {products.map((product) => (
-          <ProductCard key={product.slug} product={product} />
+          <ProductCard2 key={product.slug} product={product} />
         ))}
       </div>
     </section>

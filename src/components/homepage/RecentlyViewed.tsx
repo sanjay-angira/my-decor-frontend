@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard1 } from "@/components/ProductCard1";
 import type { ProductCardData } from "@/data/products";
 import { fetchRecentlyViewedProducts } from "@/services/recentlyViewedService";
 
@@ -43,7 +43,7 @@ export function RecentlyViewed() {
 
       <div className="product-grid best-seller-grid">
         {products.map((product) => (
-          <ProductCard key={product.slug} product={product} showRating />
+          <ProductCard1 key={product.slug} product={product} />
         ))}
       </div>
     </section>

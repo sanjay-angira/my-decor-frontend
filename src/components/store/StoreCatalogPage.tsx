@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ProductCard } from "@/components/ProductCard";
+import { ProductCard1 } from "@/components/ProductCard1";
 import {
   fetchStoreFilterOptions,
   fetchStoreProducts,
@@ -341,10 +341,9 @@ export async function StoreCatalogPage({
       {result.products.length > 0 ? (
         <div className="product-grid catalog-grid">
           {result.products.map((product) => (
-            <ProductCard
+            <ProductCard1
               key={`${product.id}-${product.slug}`}
               product={product}
-              showRating
             />
           ))}
         </div>
