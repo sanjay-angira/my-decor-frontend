@@ -453,7 +453,7 @@ export async function fetchFeaturedCategories(): Promise<
 }
 
 export async function fetchHomepageProducts(
-  section: "bestSellers" | "newArrivals",
+  section: "featured" | "bestSellers" | "newArrivals",
   pageSize = 6,
 ): Promise<ProductCardData[]> {
   const result = await fetchStoreProducts({

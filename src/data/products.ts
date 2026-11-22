@@ -888,38 +888,11 @@ export const products: Product[] = [
   },
 ];
 
-export const productBySlug = new Map(products.map((product) => [product.slug, product]));
+const productBySlug = new Map(products.map((product) => [product.slug, product]));
 
 export function getProductBySlug(slug: string | undefined): Product | undefined {
   return slug ? productBySlug.get(slug) : undefined;
 }
-
-export const bestSellerSlugs = [
-  "tree-of-life-metal-wall-art",
-  "offroad-suv-metal-wall-art",
-  "ganesha-metal-wall-art",
-  "metal-planter-with-stand",
-  "world-map-metal-wall-art",
-];
-
-export const newArrivalSlugs = [
-  "buddha-metal-wall-art",
-  "hanging-planter-set-of-3",
-  "cruiser-bike-metal-wall-art",
-  "monstera-leaf-metal-wall-art",
-  "classic-sedan-metal-wall-art",
-  "gym-motivation-metal-wall-art",
-];
-
-/** Pieces that tidy a room: desk organisers, plant stands and hanging planters. */
-export const storageSlugs = [
-  "desk-organizer-tray",
-  "metal-planter-with-stand",
-  "hanging-planter-set-of-3",
-];
-
-export const getProductsBySlugs = (slugs: string[]) =>
-  slugs.map((slug) => productBySlug.get(slug)).filter((product): product is Product => Boolean(product));
 
 export function relatedProducts(product: Product, limit = 4): Product[] {
   const sameCategory = products.filter((p) => p.id !== product.id && p.category === product.category);

@@ -7,6 +7,7 @@ import ShopByRoom from "@/components/homepage/ShopByRoom";
 import MidBanner from "@/components/homepage/MidBanner";
 import BestSellers from "@/components/homepage/BestSellers";
 import FeaturedCollection from "@/components/homepage/FeaturedCollection";
+import FeaturedProducts from "@/components/homepage/FeaturedProducts";
 import TrustBadges from "@/components/homepage/TrustBadges";
 import CategoryTiles from "@/components/homepage/CategoryTiles";
 import CategoryCircles from "@/components/homepage/CategoryCircles";
@@ -33,17 +34,21 @@ const categories = [
 ].map(([label, asset]) => ({ label, image: image(asset) }));
 
 export default async function Home() {
-  const [heroSlides, bestSellers, newArrivals, rooms, featuredCategories] =
+  const [heroSlides, featuredProducts, bestSellers, newArrivals, rooms, featuredCategories] =
     await Promise.all([
     fetchHomepageBanners().catch((error) => {
       console.error("Failed to load homepage banners on the server.", error);
       return [] as HeroSlide[];
     }),
-    fetchHomepageProducts("bestSellers").catch((error) => {
+    fetchHomepageProducts("featured", 12).catch((error) => {
+      console.error("Failed to load featured products on the server.", error);
+      return [];
+    }),
+    fetchHomepageProducts("bestSellers",10).catch((error) => {
       console.error("Failed to load best sellers on the server.", error);
       return [];
     }),
-    fetchHomepageProducts("newArrivals").catch((error) => {
+    fetchHomepageProducts("newArrivals",12).catch((error) => {
       console.error("Failed to load new arrivals on the server.", error);
       return [];
     }),
@@ -57,18 +62,16 @@ export default async function Home() {
     }),
   ]);
 
+  console.log("Featured Categories:", featuredCategories);
+
   return (
     <main>
       <HeroBanner slides={heroSlides} />
       <CategoryCircles categories={categories} />
       <CategoryTiles />
       <TrustBadges />
-      <FeaturedCollection categories={featuredCategories.map((category) => ({
-        title: category.title,
-        blurb: category.blurb,
-        image: category.mobileImage || category.image || "",
-        slug: category.slug,
-      }))} />
+      <FeaturedCollection categories={featuredCategories}/>
+      <FeaturedProducts products={featuredProducts} />
       <BestSellers products={bestSellers} />
       <MidBanner />
       <ShopByRoom rooms={rooms} />
