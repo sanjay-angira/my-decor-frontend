@@ -233,6 +233,10 @@
   cursor: pointer;
 }
 
+.catalog-grid .add-to-cart {
+  margin-left: auto;
+}
+
 .add-to-cart svg {
   width: 17px;
   height: 17px;
