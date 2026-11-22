@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Icon } from "@/components/Icon";
 import { fetchStoreCategories } from "@/services/homepageService";
 
 export const metadata = {
@@ -26,10 +27,10 @@ export default async function CategoriesPage() {
       </header>
 
       {categories.length > 0 ? (
-        <div className="category-directory-grid">
+        <div className="featured-grid">
           {categories.map((category, index) => (
             <Link
-              className="category-directory-card"
+              className="featured-card"
               href={
                 category.slug
                   ? `/category/${encodeURIComponent(category.slug)}`
@@ -37,23 +38,26 @@ export default async function CategoriesPage() {
               }
               key={category.id}
             >
-              <span className="category-directory-image">
+              <span className="featured-image">
                 {category.image ? (
                   <Image
                     src={category.image}
-                    alt=""
+                    alt={category.name}
                     fill
                     loading={index === 0 ? "eager" : "lazy"}
                     sizes="(max-width: 640px) 100vw, (max-width: 1000px) 50vw, 33vw"
                     unoptimized
                   />
                 ) : (
-                  <span className="category-directory-placeholder" aria-hidden="true">
+                  <span
+                    className="category-directory-placeholder"
+                    aria-hidden="true"
+                  >
                     {category.name.charAt(0).toUpperCase()}
                   </span>
                 )}
               </span>
-              <span className="category-directory-card-content">
+              <span className="featured-caption">
                 <span>
                   <strong>{category.name}</strong>
                   <small>
@@ -61,7 +65,9 @@ export default async function CategoriesPage() {
                     {category.productCount === 1 ? "product" : "products"}
                   </small>
                 </span>
-                <span className="category-directory-cta">Explore</span>
+                <i>
+                  <Icon name="arrow" />
+                </i>
               </span>
             </Link>
           ))}

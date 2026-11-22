@@ -1,20 +1,50 @@
 import CollectionTile from "./homePageUtilis/CollectionTile";
+import type { StoreCategoryDirectoryItem } from "@/services/homepageService";
 
-const image = (name: string) => `/images/${name}.jpg`;
-const CategoryTiles = () => {
+type CategoryTilesProps = {
+  categories: StoreCategoryDirectoryItem[];
+};
+
+const CategoryTiles = ({ categories }: CategoryTilesProps) => {
+  if (!categories.length) return null;
+
+  const renderTile = (category: StoreCategoryDirectoryItem, large = false) => (
+    <CollectionTile
+      key={category.id}
+      title={category.name}
+      blurb={
+        category.description ||
+        `Explore our ${category.name.toLowerCase()} collection.`
+      }
+      cta={`Shop ${category.name}`}
+      src={category.image3x2 || category.image || category.desktopBanner || ""}
+      alt={`${category.name} category`}
+      href={
+        category.slug
+          ? `/category/${encodeURIComponent(category.slug)}`
+          : "/products"
+      }
+      large={large}
+    />
+  );
+
+  const featuredCategories = categories.slice(0, 2);
+  const remainingCategories = categories.slice(2);
+
   return (
     <section className="page-width category-tiles" aria-label="Collections">
-      <div className="tile-row tile-row-two">
-        <CollectionTile title="Modern Wall Art" blurb="Statement pieces for modern homes." cta="Shop Wall Art" src={image("art_leaves")} alt="Black monstera leaf metal wall art above a sideboard" large />
-        <CollectionTile title="Car Wall Art" blurb="For true automobile enthusiasts." cta="Explore Collection" src={image("art_car")} alt="Black metal sedan wall art above a grey sofa" large />
-      </div>
-      <div className="tile-row tile-row-three">
-        <CollectionTile title="Spiritual Wall Art" blurb="Bring positivity and peace home." cta="Shop Now" src={image("art_buddha")} alt="Black metal Buddha wall art with mandala halo" />
-        <CollectionTile title="Planters" blurb="Stylish planters for indoor & outdoor spaces." cta="Shop Planters" src={image("planters")} alt="Matte black planters with lush green plants" />
-        <CollectionTile title="Lamps" blurb="Modern lighting for a beautiful ambience." cta="View Collection" src={image("lamp")} alt="Black arched table lamp glowing warmly" />
-      </div>
+      {featuredCategories.length > 0 && (
+        <div className="tile-row tile-row-two">
+          {featuredCategories.map((category) => renderTile(category, true))}
+        </div>
+      )}
+      {remainingCategories.length > 0 && (
+        <div className="tile-row tile-row-three">
+          {remainingCategories.map((category) => renderTile(category))}
+        </div>
+      )}
     </section>
   );
-}
+};
 
 export default CategoryTiles; 

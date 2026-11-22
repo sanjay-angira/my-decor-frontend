@@ -196,11 +196,12 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", updateScrollState);
   }, []);
 
-  const topLevelCategories = categories.filter(
-    (category) => category.parentId === null || category.parentId === undefined,
+  const headerCategories = categories.filter(
+    (category) =>
+      category.parentId === null ||
+      category.parentId === undefined ||
+      category.parentId === 0,
   );
-  const headerCategories =
-    topLevelCategories.length > 0 ? topLevelCategories : categories;
 
   useEffect(() => {
     if (!menuOpen) return;

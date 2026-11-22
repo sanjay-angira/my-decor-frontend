@@ -1,28 +1,27 @@
 import { RecentlyViewed } from "@/components/homepage/RecentlyViewed";
 import HeroBanner, { type HeroSlide } from "@/components/homepage/HeroBanner";
+import CategoryCircles from "@/components/homepage/CategoryCircles";
 import TrustedBy from "@/components/homepage/TrustedBy";
 import Newsletter from "@/components/homepage/Newsletter";
 import NewArrivals from "@/components/homepage/NewArrivals";
 import ShopByRoom from "@/components/homepage/ShopByRoom";
 import MidBanner from "@/components/homepage/MidBanner";
 import BestSellers from "@/components/homepage/BestSellers";
-import FeaturedCollection from "@/components/homepage/FeaturedCollection";
 import FeaturedProducts from "@/components/homepage/FeaturedProducts";
 import TrustBadges from "@/components/homepage/TrustBadges";
 import CategoryTiles from "@/components/homepage/CategoryTiles";
-import CategoryCircles from "@/components/homepage/CategoryCircles";
 import {
   fetchHomepageBanners,
-  fetchFeaturedCategories,
   fetchHomepageProducts,
   fetchHomepageRooms,
+  fetchStoreCategories,
 } from "@/services/homepageService";
 
 export const dynamic = "force-dynamic";
 
 const image = (name: string) => `/images/${name}.jpg`;
 
-const categories = [
+const roundCategories = [
   ["Wall Art", "art_tree"],
   ["Car Wall Art", "art_car"],
   ["Spiritual Wall Art", "art_buddha"],
@@ -34,7 +33,14 @@ const categories = [
 ].map(([label, asset]) => ({ label, image: image(asset) }));
 
 export default async function Home() {
-  const [heroSlides, featuredProducts, bestSellers, newArrivals, rooms, featuredCategories] =
+  const [
+    heroSlides,
+    featuredProducts,
+    bestSellers,
+    newArrivals,
+    rooms,
+    storeCategories,
+  ] =
     await Promise.all([
     fetchHomepageBanners().catch((error) => {
       console.error("Failed to load homepage banners on the server.", error);
@@ -56,21 +62,23 @@ export default async function Home() {
       console.error("Failed to load rooms on the server.", error);
       return [];
     }),
-    fetchFeaturedCategories().catch((error) => {
-      console.error("Failed to load featured categories on the server.", error);
+    fetchStoreCategories().catch((error) => {
+      console.error("Failed to load homepage categories on the server.", error);
       return [];
     }),
   ]);
 
-  console.log("Featured Categories:", featuredCategories);
+  const parentCategories = storeCategories.filter(
+    (category) => category.parentId === null,
+  );
 
   return (
     <main>
       <HeroBanner slides={heroSlides} />
-      <CategoryCircles categories={categories} />
-      <CategoryTiles />
+      <CategoryCircles categories={roundCategories} />
+      <CategoryTiles categories={parentCategories} />
       <TrustBadges />
-      <FeaturedCollection categories={featuredCategories}/>
+      {/* <FeaturedCollection categories={featuredCategories}/> */}
       <FeaturedProducts products={featuredProducts} />
       <BestSellers products={bestSellers} />
       <MidBanner />

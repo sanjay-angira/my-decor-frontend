@@ -116,6 +116,7 @@ export type StoreCategoryDirectoryItem = {
   name: string;
   slug: string | null;
   image: string | null;
+  image3x2: string | null;
   productCount: number;
   parentId: number | null;
   description: string;
@@ -131,6 +132,7 @@ type StoreCategoriesResponse = {
     description?: string | null;
     desktopBanner?: string | null;
     image?: string | null;
+    image3x2?: string | null;
     productCount?: number;
     parentId?: number | null;
     categoryOffers?: Array<{
@@ -364,7 +366,8 @@ export async function fetchStoreCategories(): Promise<
       id: categoryId,
       name: category.name.trim(),
       slug: category.slug?.trim() || null,
-      image: category.image || category.desktopBanner || null,
+      image: category.image || null,
+      image3x2: category.image3x2 || null,
       productCount: Number.isFinite(productCount)
         ? Math.max(0, productCount)
         : 0,
